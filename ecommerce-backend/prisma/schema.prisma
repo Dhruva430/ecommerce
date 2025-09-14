@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int              @id @default(autoincrement()) @map("_id")
+  email       String           @unique
+  firstName   String
+  lastName    String
+  address     String?
+  addressId   String           @unique
+  phoneNumber BigInt
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  Cart        Cart[]
+  order       Order[]
+  credential  UserCredential[]
+}
+
+model UserCredential {
+  id       Int    @id @default(autoincrement())
+  userId   Int
+  password String // Encoded password
+  user     User   @relation(fields: [userId], references: [id])
+}
+
+model Order {
+  id           Int            @id @default(autoincrement())
+  userId       Int
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  User         User           @relation(fields: [userId], references: [id])
+  orderProduct OrderProduct[]
+  Cart         Cart[]
+}
+
+model OrderProduct {
+  id        Int   @id @default(autoincrement())
+  productId Int
+  orderId   Int
+  price     Float
+  Order     Order @relation(fields: [orderId], references: [id])
+}
+
+model Cart {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  orderId   Int
+  productId Int
+  price     Float
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User     @relation(fields: [userId], references: [id])
+  Order     Order    @relation(fields: [orderId], references: [id])
+
+  @@unique([userId, productId])
+}
