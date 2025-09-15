@@ -15,18 +15,19 @@ datasource db {
 }
 
 model User {
-  id          Int              @id @default(autoincrement()) @map("_id")
-  email       String           @unique
-  firstName   String
-  lastName    String
-  address     String?
-  addressId   String           @unique
-  phoneNumber BigInt
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  Cart        Cart[]
-  order       Order[]
-  credential  UserCredential[]
+  id           Int              @id @default(autoincrement()) @map("_id")
+  email        String           @unique
+  firstName    String
+  lastName     String
+  address      String?
+  addressId    String           @unique
+  phoneNumber  BigInt
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  Cart         Cart[]
+  order        Order[]
+  credential   UserCredential[]
+  CheckoutInfo CheckoutInfo?
 }
 
 model UserCredential {
@@ -67,4 +68,11 @@ model Cart {
   Order     Order    @relation(fields: [orderId], references: [id])
 
   @@unique([userId, productId])
+}
+
+model CheckoutInfo {
+  id     Int  @id @default(autoincrement()) @map("_id")
+  data   Json
+  userId Int  @unique
+  User   User @relation(fields: [userId], references: [id])
 }
