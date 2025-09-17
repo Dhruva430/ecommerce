@@ -15,12 +15,11 @@ datasource db {
 }
 
 model User {
-  id           Int              @id @default(autoincrement()) @map("_id")
+  id           Int              @id @default(autoincrement()) @map("id")
   email        String           @unique
   firstName    String
   lastName     String
   address      String?
-  addressId    String           @unique
   phoneNumber  BigInt
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
@@ -44,7 +43,6 @@ model Order {
   updatedAt    DateTime       @updatedAt
   User         User           @relation(fields: [userId], references: [id])
   orderProduct OrderProduct[]
-  Cart         Cart[]
 }
 
 model OrderProduct {
@@ -52,27 +50,27 @@ model OrderProduct {
   productId Int
   orderId   Int
   price     Float
-  Order     Order @relation(fields: [orderId], references: [id])
+  quantity  Int   @default(1)
+  order     Order @relation(fields: [orderId], references: [id])
 }
 
 model Cart {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  orderId   Int
+  id     Int @id @default(autoincrement())
+  userId Int
+
   productId Int
   price     Float
   quantity  Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  User      User     @relation(fields: [userId], references: [id])
-  Order     Order    @relation(fields: [orderId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, productId])
 }
 
 model CheckoutInfo {
-  id     Int  @id @default(autoincrement()) @map("_id")
+  id     Int  @id @default(autoincrement()) @map("id")
   data   Json
   userId Int  @unique
-  User   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id])
 }
