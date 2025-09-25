@@ -4,24 +4,29 @@ import { type CreateProductDto } from './dto/product.dto';
 
 @Injectable()
 export class ProductService {
-  async getProduct(id: number) {
+  async getProduct(id: string) {
+    const parsedId = parseInt(id, 10);
+    if (isNaN(parsedId)) {
+      throw new Error('Invalid product ID');
+    }
     const product = await prisma.product.findUnique({
-      where: { id },
+      where: { id: parsedId },
     });
     return product;
   }
   async createProduct(createProductDto: CreateProductDto) {
-    await prisma.product.create({
+    const product = await prisma.product.create({
       data: createProductDto,
     });
     return {
       message: 'Product created successfully',
-      product: createProductDto,
+      product: product,
     };
   }
-  async deleteProduct(id: number) {
+  async deleteProduct(id: string) {
+    const parsedInt = parseInt(id, 10);
     await prisma.product.delete({
-      where: { id },
+      where: { id: parsedInt },
     });
     return {
       message: 'Product deleted successfully',
