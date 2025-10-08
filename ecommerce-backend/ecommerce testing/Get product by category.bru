@@ -1,0 +1,15 @@
+meta {
+  name: Get product by category
+  type: http
+  seq: 5
+}
+
+get {
+  url: http://localhost:3000/products/category/Electronics
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,35 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { prisma } from 'lib/primsa';
-import { type CreateProductDto } from './dto/product.dto';
-
+import productData from '../data/products.json';
 @Injectable()
 export class ProductService {
-  async getProduct(id: string) {
-    const parsedId = parseInt(id, 10);
-    if (isNaN(parsedId)) {
-      throw new Error('Invalid product ID');
-    }
-    const product = await prisma.product.findUnique({
-      where: { id: parsedId },
-    });
-    return product;
+  private products = productData;
+  getAllProducts() {
+    return this.products;
   }
-  async createProduct(createProductDto: CreateProductDto) {
-    const product = await prisma.product.create({
-      data: createProductDto,
-    });
-    return {
-      message: 'Product created successfully',
-      product: product,
-    };
+  getProductById(id: string) {
+    return this.products.find((product) => product.id === id);
   }
-  async deleteProduct(id: string) {
-    const parsedInt = parseInt(id, 10);
-    await prisma.product.delete({
-      where: { id: parsedInt },
-    });
-    return {
-      message: 'Product deleted successfully',
-    };
+  getProductByCategory(category: string) {
+    const categories = this.products.filter(
+      (product) =>
+        product.category &&
+        product.category.toLowerCase() === category.toLowerCase(),
+    );
+
+    return categories;
   }
 }
