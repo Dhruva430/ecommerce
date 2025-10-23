@@ -3,34 +3,26 @@ import productData from '../data/products.json';
 import { prisma } from 'libs/primsa';
 @Injectable()
 export class CartService {
-  private products = productData;
-
-  async addToCart(id: string) {
-    const product = this.products.find((product) => product.id === id);
-    if (!product) {
-      return { message: 'Product not found' };
-    }
-    if (!product.price || !product.price.payable) {
-      return { message: 'Product price not available' };
-    }
-    const parsedAmount = parseFloat(product.price.payable);
-    await prisma.cart.upsert({
-      where: {
-        userId_productId: {
-          userId: '66f55c63b5e0a5c6e3dbfabc',
-          productId: id,
-        },
-      },
-      update: {
-        amount: { increment: parsedAmount },
-      },
-      create: {
-        userId: '66f55c63b5e0a5c6e3dbfabc',
-        productId: id,
-        amount: parsedAmount,
+  async addToCart(productId: string) {
+    const cartItem = await prisma.cart.create({
+      data: {
+        amount: 1,
+        productId: productId,
+        userId: 'user-123',
       },
     });
-
-    return { message: 'Product added to cart successfully' };
+    if (!cartItem) {
+      throw new Error('Failed to add product to cart');
+    }
+    return { message: `${cartItem.productId} Added in your Cart. ` };
+  }
+  async removeFromCart(productId: string) {
+    const deletedItem = await prisma.cart.deleteMany({
+      where: { productId },
+    });
+    if (deletedItem.count === 0) {
+      throw new Error('Product not found in cart');
+    }
+    return { message: `Product ${productId} removed from cart.` };
   }
 }

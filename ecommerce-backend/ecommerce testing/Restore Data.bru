@@ -1,15 +1,16 @@
 meta {
-  name: Get All Categories
+  name: Restore Data
   type: http
   seq: 1
 }
 
 get {
-  url: http://localhost:3000/api/categories
+  url: http://localhost:8080/api/products/restore
   body: none
   auth: inherit
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

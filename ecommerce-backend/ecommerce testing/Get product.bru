@@ -5,11 +5,17 @@ meta {
 }
 
 get {
-  url: http://localhost:3000/products
+  url: http://localhost:8080/api/products?limit=10&offset=0
   body: none
   auth: inherit
 }
 
+params:query {
+  limit: 10
+  offset: 0
+}
+
 settings {
   encodeUrl: true
+  timeout: 0
 }

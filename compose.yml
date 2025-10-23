@@ -1,13 +1,11 @@
 services:
-  mongo:
-    image: mongo:latest
-    container_name: ecommerce-mongo
+  postgres:
+    image: postgres:latest
+    container_name: ecommerce-postgres
+    restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: user
-      MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: mydatabase
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
     ports:
-      - "27017:27017"
-    command: mongod --replSet rs0 --bind_ip_all --auth --keyFile /etc/mongo-keyfile
-    volumes:
-      - /home/dhruva/mongo-keyfile:/etc/mongo-keyfile
+      - "5432:5432"

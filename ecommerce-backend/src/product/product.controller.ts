@@ -4,17 +4,26 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
+  Query,
   UsePipes,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 
-@Controller('/products')
+@Controller('/api/products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
   @Get()
-  getAllProducts() {
-    return this.productService.getAllProducts();
+  getAllProducts(
+    @Query('limit', ParseIntPipe) limit: number,
+    @Query('offset', ParseIntPipe) offset: number,
+  ) {
+    return this.productService.getProducts(limit, offset);
+  }
+  @Get('/restore')
+  restoreProducts() {
+    return this.productService.restoreProducts();
   }
 
   @Get('/:id')

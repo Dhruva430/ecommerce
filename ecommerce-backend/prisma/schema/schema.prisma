@@ -1,0 +1,183 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+generator client {
+  provider = "prisma-client-js"
+  // previewFeatures = ["prismaSchemaFolder"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid()) @map("id")
+  firstName   String   @map("first_name")
+  lastName    String   @map("last_name")
+  phoneNumber String?  @map("phone_number")
+  email       String   @map("email")
+  createdAt   DateTime @default(now()) @map("created_at")
+  role        Role     @default(USER) @map("role")
+  addressId   String?  @unique @map("address_id")
+  verified    Boolean  @default(false) @map("verified")
+
+  credentials  UserCredentials?
+  cart         Cart[]
+  address      Address?
+  checkoutInfo CheckoutInfo[]
+  order        Order[]
+
+  seller Seller[]
+  Admin  Admin?
+
+  @@unique([phoneNumber, email])
+  @@map("user")
+}
+
+model Seller {
+  id           String         @id @default(uuid()) @map("id")
+  userId       String         @map("user_id")
+  shopName     String         @map("shop_name")
+  shopLogo     String?        @map("shop_logo")
+  description  String?        @map("description")
+  gstNumber    String?        @map("gst_number")
+  status       SellerStatus   @default(PENDING) @map("status")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  verified     Boolean        @default(false) @map("verified")
+  user         User           @relation(fields: [userId], references: [id])
+  orderProduct OrderProduct[]
+  product      Product[]
+
+  @@unique([gstNumber, userId])
+  @@map("seller")
+}
+
+model Admin {
+  id        String   @id @default(uuid()) @map("id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId])
+  @@map("admin")
+}
+
+enum SellerStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Role {
+  USER
+  SELLER
+  ADMIN
+}
+
+model UserCredentials {
+  id       String @id @default(uuid()) @map("id")
+  password String @map("password")
+  user     User   @relation(fields: [userId], references: [id])
+  userId   String @unique @map("user_id")
+
+  @@map("user_credentials")
+}
+
+model Cart {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  productId String   @map("product_id")
+  selected  Boolean  @default(true)
+  amount    Int      @map("amount")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id])
+  product   Product? @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+  @@map("cart")
+}
+
+model CheckoutInfo {
+  id     String @id @default(uuid())
+  data   Json   @map("data")
+  userId String @map("user_id")
+  User   User   @relation(fields: [userId], references: [id])
+
+  @@map("checkout_info")
+}
+
+model Address {
+  id       String   @id @default(uuid()) @map("id")
+  pincode  Int      @map("pincode")
+  houseNo  String   @map("house_no")
+  area     String   @map("area")
+  landmark String?  @map("landmark")
+  city     String   @map("city")
+  state    String   @map("state")
+  lastUsed DateTime @default(now()) @map("last_used")
+  user     User     @relation(fields: [userId], references: [id])
+  userId   String   @unique @map("user_id")
+
+  @@map("address")
+}
+
+model Order {
+  id            String         @id @default(uuid()) @map("id")
+  userId        String         @map("user_id")
+  Address       String         @map("address")
+  status        OrderStatus    @default(PENDING) @map("status")
+  paymentStatus PaymentStatus  @default(PENDING) @map("payment_status")
+  totalAmount   Float          @map("total_amount")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  orderProduct  OrderProduct[]
+  payment       Payment?
+  user          User           @relation(fields: [userId], references: [id])
+
+  @@map("order")
+}
+
+model OrderProduct {
+  id        String         @id @default(uuid()) @map("id")
+  productId String         @map("product_id")
+  sellerId  String         @map("seller_id")
+  amount    Int            @map("amount")
+  variantId String         @map("variant_id")
+  orderId   String?        @map("order_id")
+  seller    Seller         @relation(fields: [sellerId], references: [id])
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+  order     Order?         @relation(fields: [orderId], references: [id])
+
+  @@map("order_product")
+}
+
+model Payment {
+  id             String        @id @default(uuid()) @map("id")
+  orderId        String        @unique @map("order_id")
+  transactionId  String?       @map("transaction_id")
+  paymentGateway String?       @map("payment_gateway")
+  amount         Float         @map("amount")
+  status         PaymentStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
+  order          Order         @relation(fields: [orderId], references: [id])
+
+  @@unique([orderId, transactionId])
+  @@map("payment")
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
