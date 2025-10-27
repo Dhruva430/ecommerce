@@ -1,11 +1,8 @@
-import { Post } from '@nestjs/common';
-import { Role } from '@prisma/client';
-import { Roles } from 'src/common/roles/roles.decorator';
+import { Get } from '@nestjs/common';
 
-export class Authcontroller {
-  @Post()
-  @Roles(Role.ADMIN)
-  create() {
-    return 'this is a test';
+export class AuthController {
+  @Get()
+  getHello(): string {
+    return 'Hello World!';
   }
 }
