@@ -30,8 +30,8 @@ model User {
   checkoutInfo CheckoutInfo[]
   order        Order[]
 
-  seller Seller[]
-  Admin  Admin?
+  sellerProfile Seller[]
+  adminProfile  Admin?
 
   @@unique([phoneNumber, email])
   @@map("user")
@@ -58,6 +58,7 @@ model Seller {
 model Admin {
   id        String   @id @default(uuid()) @map("id")
   userId    String   @map("user_id")
+  verified  Boolean  @default(false) @map("verified")
   createdAt DateTime @default(now()) @map("created_at")
   user      User     @relation(fields: [userId], references: [id])
 
