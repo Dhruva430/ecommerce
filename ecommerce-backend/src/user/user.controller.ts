@@ -21,13 +21,13 @@ export default class UserController {
 
   @Put('update')
   @Roles('USER')
-  updateProfile(@Req() req, @Body() dto: UpdateUserDto) {
+  updateProfile(@Req() req, @Body() dto: any) {
     return this.userService.updateProfile(req.user.id, req.body);
   }
 
   @Get('cart')
   @Roles('USER')
-  getCart() {
-    return 'User Cart Data';
+  getCart(@Req() req) {
+    return this.userService.getCart(req.user.id);
   }
 }
