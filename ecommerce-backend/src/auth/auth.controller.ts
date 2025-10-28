@@ -1,8 +1,9 @@
-import { Get } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 
+@Controller('api/auth')
 export class AuthController {
   @Get()
-  getHello(): string {
-    return 'Hello World!';
+  getStatus(): string {
+    return 'Auth service is running';
   }
 }
