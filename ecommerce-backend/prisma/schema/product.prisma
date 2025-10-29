@@ -4,7 +4,7 @@ model Product {
   description String @map("description")
   price       Float  @map("price")
   imageUrl    String @map("image_url")
-  discounted  Int    @map("discounted")
+  discounted  Int?   @default(0) @map("discounted")
   sellerId    String @map("seller_id")
 
   createdAt      DateTime         @default(now())
@@ -22,7 +22,7 @@ model ProductVariant {
   price            Float              @map("price")
   stock            Int                @map("stock")
   productId        String             @map("product_id")
-  product          Product            @relation(fields: [productId], references: [id])
+  product          Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
   variantAttribute VariantAttribute[]
   variantImages    VariantImages[]
 
@@ -34,12 +34,12 @@ model VariantImages {
   imageUrl  String         @map("image_url")
   position  Int            @default(0) @map("position")
   variantId String         @map("variant_id")
-  variant   ProductVariant @relation(fields: [variantId], references: [id])
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
 }
 
 model VariantAttribute {
   id        String         @id @default(uuid()) @map("id")
-  variant   ProductVariant @relation(fields: [variantId], references: [id])
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
   name      String         @map("name")
   value     String         @map("value")
   variantId String         @map("variant_id")

@@ -14,15 +14,12 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(uuid()) @map("id")
-  firstName   String?  @map("first_name")
-  lastName    String?  @map("last_name")
-  phoneNumber String?  @map("phone_number")
-  email       String   @map("email")
-  createdAt   DateTime @default(now()) @map("created_at")
-  role        Role     @default(USER) @map("role")
-  addressId   String?  @unique @map("address_id")
-  verified    Boolean  @default(false) @map("verified")
+  id        String   @id @default(uuid()) @map("id")
+  email     String   @map("email")
+  createdAt DateTime @default(now()) @map("created_at")
+  role      Role     @default(USER) @map("role")
+  addressId String?  @unique @map("address_id")
+  verified  Boolean  @default(false) @map("verified")
 
   credentials  UserCredentials?
   cart         Cart[]
@@ -33,7 +30,7 @@ model User {
   sellerProfile Seller[]
   adminProfile  Admin?
 
-  @@unique([phoneNumber, email])
+  @@unique([email])
   @@map("user")
 }
 
@@ -50,6 +47,7 @@ model Seller {
   user         User           @relation(fields: [userId], references: [id])
   orderProduct OrderProduct[]
   product      Product[]
+  Order        Order[]
 
   @@unique([gstNumber, userId])
   @@map("seller")
@@ -79,10 +77,13 @@ enum Role {
 }
 
 model UserCredentials {
-  id       String @id @default(uuid()) @map("id")
-  password String @map("password")
-  user     User   @relation(fields: [userId], references: [id])
-  userId   String @unique @map("user_id")
+  id          String  @id @default(uuid()) @map("id")
+  password    String  @map("password")
+  firstName   String? @map("first_name")
+  lastName    String? @map("last_name")
+  phoneNumber String? @map("phone_number")
+  user        User    @relation(fields: [userId], references: [id])
+  userId      String  @unique @map("user_id")
 
   @@map("user_credentials")
 }
@@ -129,12 +130,14 @@ model Order {
   id            String         @id @default(uuid()) @map("id")
   userId        String         @map("user_id")
   Address       String         @map("address")
-  status        OrderStatus    @default(PENDING) @map("status")
-  paymentStatus PaymentStatus  @default(PENDING) @map("payment_status")
+  sellerId      String?        @map("seller_id")
   totalAmount   Float          @map("total_amount")
   createdAt     DateTime       @default(now()) @map("created_at")
+  status        OrderStatus    @default(PENDING) @map("status")
+  paymentStatus PaymentStatus  @default(PENDING) @map("payment_status")
   orderProduct  OrderProduct[]
   payment       Payment?
+  seller        Seller?        @relation(fields: [sellerId], references: [id])
   user          User           @relation(fields: [userId], references: [id])
 
   @@map("order")
