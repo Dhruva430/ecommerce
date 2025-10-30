@@ -52,9 +52,9 @@ export default class SellerService {
     return product;
   }
 
-  async deleteProduct(sellerId: string, productId: string) {
+  async deleteProduct(productId: string) {
     const deletedProduct = await prisma.product.deleteMany({
-      where: { id: productId, sellerId: sellerId },
+      where: { id: productId },
     });
     return deletedProduct;
   }

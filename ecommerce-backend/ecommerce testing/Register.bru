@@ -1,0 +1,24 @@
+meta {
+  name: Register
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:8080/api/auth/register
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email":"rdhruva12345@gmail.com",
+    "password":"iamhero",
+    "role":"SELLER"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

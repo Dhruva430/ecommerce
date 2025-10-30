@@ -4,10 +4,56 @@ meta {
   seq: 5
 }
 
-get {
-  url: http://localhost:8080/api/products/category/Clothing
-  body: none
-  auth: inherit
+post {
+  url: http://localhost:8080/api/seller/add-products
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: 
+}
+
+body:json {
+  {
+    "title": "BENYAR Luxury Business Casual Leather Chronograph Watch",
+    "description": "High-quality chronograph watch with hardlex glass and genuine leather strap. Waterproof up to 20M.",
+    "price": 2890,
+    "imageUrl": "https://m.media-amazon.com/images/I/51fFe0OK4IL._SY300_SX300_.jpg",
+    "category": "FASHION",
+    "discounted": 42,
+    "variants": [
+      {
+        "title": "Watch - Black Leather Strap",
+        "description": "Black leather strap, classic dial.",
+        "price": 2890,
+        "stock": 50,
+        "size": "One Size",
+        "variantAttributes": [
+          { "name": "Color", "value": "Black" },
+          { "name": "Material", "value": "Genuine Leather" }
+        ],
+        "variantImages": [
+          { "imageUrl": "https://cdn.example.com/products/watch/black_1.jpg", "position": 0 },
+          { "imageUrl": "https://cdn.example.com/products/watch/black_2.jpg", "position": 1 }
+        ]
+      },
+      {
+        "title": "Watch - Brown Leather Strap",
+        "description": "Brown strap, classic dial.",
+        "price": 2890,
+        "stock": 30,
+        "size": "One Size",
+        "variantAttributes": [
+          { "name": "Color", "value": "Brown" },
+          { "name": "Material", "value": "Genuine Leather" }
+        ],
+        "variantImages": [
+          { "imageUrl": "https://cdn.example.com/products/watch/brown_1.jpg", "position": 0 }
+        ]
+      }
+    ]
+  }
 }
 
 settings {

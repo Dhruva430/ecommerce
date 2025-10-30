@@ -20,4 +20,15 @@ export class UserService {
     });
     return updatedUser;
   }
+  async getCart(userId: string) {
+    const cart = await prisma.cart.findMany({
+      where: {
+        userId: userId,
+      },
+      include: {
+        product: true,
+      },
+    });
+    return cart;
+  }
 }

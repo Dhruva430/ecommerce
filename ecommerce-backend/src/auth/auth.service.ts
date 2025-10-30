@@ -11,7 +11,7 @@ export default class AuthService {
 
   async register(dto: CreateUserDto) {
     const existingUser = await prisma.user.findFirst({
-      where: { email: dto.email, role: dto.role },
+      where: { email: dto.email },
     });
     if (existingUser) {
       throw new UnauthorizedException('User already exists');

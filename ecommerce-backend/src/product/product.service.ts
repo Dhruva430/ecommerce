@@ -24,7 +24,8 @@ export class ProductService {
           imageUrl: product.imageUrl,
           price: product.price,
           discounted: product.discounted,
-          ProductVariant: {
+          sellerId: 'd0090758-0148-44df-b7db-582b9dd5f556',
+          productVariant: {
             create: product.ProductVariant.map((variant) => ({
               id: variant.id,
               size: variant.size,
@@ -32,7 +33,8 @@ export class ProductService {
               title: variant.title,
               price: variant.price,
               stock: variant.stock,
-              VariantAttribute: {
+
+              variantAttribute: {
                 create: variant.VariantAttribute.map((attr) => ({
                   id: attr.id,
                   name: attr.name,
@@ -40,7 +42,7 @@ export class ProductService {
                 })),
               },
 
-              VariantImages: {
+              variantImages: {
                 create: variant.VariantImages.map((img) => ({
                   id: img.id,
                   imageUrl: img.imageUrl,
