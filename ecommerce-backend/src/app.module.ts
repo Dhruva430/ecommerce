@@ -10,15 +10,5 @@ import { AuthGuard } from './auth/guards/auth.guard';
 
 @Module({
   imports: [AuthModule, ProductModule, CartModule, UserModule, SellerModule],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard, // runs first
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard, // runs second
-    },
-  ],
 })
 export class AppModule {}

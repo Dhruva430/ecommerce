@@ -1,3 +1,4 @@
+import { Category } from '@prisma/client';
 import { prisma } from 'libs/primsa';
 import { CreateProductDto } from 'src/common/dto/create-product.dto';
 
@@ -6,16 +7,24 @@ export default class SellerService {
     // Implementation here
   }
 
-  async createProduct(sellerId: string, dto: CreateProductDto) {
+  async createProduct(userId: string, dto: CreateProductDto) {
+    const seller = await prisma.seller.findUnique({
+      where: {
+        userId,
+      },
+    });
+    if (!seller) {
+      throw new Error('Seller not found');
+    }
     const product = await prisma.product.create({
       data: {
         title: dto.title,
         description: dto.description || '',
         price: dto.price,
         imageUrl: dto.imageUrl,
-        category: dto.category,
+        category: Category.ELECTRONICS,
         discounted: dto.discounted || 0,
-        sellerId: sellerId,
+        sellerId: seller.id,
         productVariant: {
           create: dto.variants?.map((variant) => ({
             title: variant.title,

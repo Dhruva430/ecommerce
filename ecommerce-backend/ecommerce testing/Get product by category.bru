@@ -11,49 +11,71 @@ post {
 }
 
 auth:bearer {
-  token: 
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNhMTk2ODQwLTdmYWEtNDY3My1iODAzLTg3YTlkMDEyZGQwYSIsImVtYWlsIjoic2hvb3R3aXRoY3JhenlAZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NjE4MjA0ODEsImV4cCI6MTc2MTgyNDA4MX0.uK5r4pF5OFGjMGQ3CgsmQlWMelmUoaXSfYuoXMYf97g
 }
 
 body:json {
   {
-    "title": "BENYAR Luxury Business Casual Leather Chronograph Watch",
-    "description": "High-quality chronograph watch with hardlex glass and genuine leather strap. Waterproof up to 20M.",
-    "price": 2890,
-    "imageUrl": "https://m.media-amazon.com/images/I/51fFe0OK4IL._SY300_SX300_.jpg",
-    "category": "FASHION",
-    "discounted": 42,
+    "title": "Smart Watch X200",
+    "description": "A stylish smartwatch with health tracking features.",
+    "price": 4999,
+    "imageUrl": "https://example.com/main-watch.jpg",
+    "category": "Electronics",
+    "discounted": 10,
     "variants": [
       {
-        "title": "Watch - Black Leather Strap",
-        "description": "Black leather strap, classic dial.",
-        "price": 2890,
-        "stock": 50,
-        "size": "One Size",
+        "title": "Black Color",
+        "description": "Black variant with rubber strap",
+        "price": 4999,
+        "stock": 20,
+        "size": "Medium",
         "variantAttributes": [
-          { "name": "Color", "value": "Black" },
-          { "name": "Material", "value": "Genuine Leather" }
+          {
+            "name": "Color",
+            "value": "Black"
+          },
+          {
+            "name": "Strap Material",
+            "value": "Rubber"
+          }
         ],
         "variantImages": [
-          { "imageUrl": "https://cdn.example.com/products/watch/black_1.jpg", "position": 0 },
-          { "imageUrl": "https://cdn.example.com/products/watch/black_2.jpg", "position": 1 }
+          {
+            "imageUrl": "https://example.com/black-front.jpg",
+            "position": 1
+          },
+          {
+            "imageUrl": "https://example.com/black-side.jpg",
+            "position": 2
+          }
         ]
       },
       {
-        "title": "Watch - Brown Leather Strap",
-        "description": "Brown strap, classic dial.",
-        "price": 2890,
-        "stock": 30,
-        "size": "One Size",
+        "title": "Silver Color",
+        "description": "Silver variant with metal strap",
+        "price": 5499,
+        "stock": 15,
+        "size": "Large",
         "variantAttributes": [
-          { "name": "Color", "value": "Brown" },
-          { "name": "Material", "value": "Genuine Leather" }
+          {
+            "name": "Color",
+            "value": "Silver"
+          },
+          {
+            "name": "Strap Material",
+            "value": "Metal"
+          }
         ],
         "variantImages": [
-          { "imageUrl": "https://cdn.example.com/products/watch/brown_1.jpg", "position": 0 }
+          {
+            "imageUrl": "https://example.com/silver-front.jpg",
+            "position": 1
+          }
         ]
       }
     ]
   }
+  
 }
 
 settings {

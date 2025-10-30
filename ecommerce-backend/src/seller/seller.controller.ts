@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import SellerService from './seller.service';
 import { Roles } from 'src/common/roles/roles.decorator';
-import { Role } from '@prisma/client';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RolesGuard } from 'src/common/roles/roles.guard';
 
@@ -22,7 +21,8 @@ export default class SellerController {
   @Post('add-products')
   @Roles('SELLER')
   addProduct(@Req() req, @Body() dto: any) {
-    return this.sellerService.createProduct(req.user.userId, dto);
+    console.log(`THis is Requested User${req.user.id}`);
+    return this.sellerService.createProduct(req.user.id, dto);
   }
 
   @Get('products')

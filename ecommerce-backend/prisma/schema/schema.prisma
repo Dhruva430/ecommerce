@@ -44,12 +44,12 @@ model Seller {
   status       SellerStatus   @default(PENDING) @map("status")
   createdAt    DateTime       @default(now()) @map("created_at")
   verified     Boolean        @default(false) @map("verified")
-  user         User           @relation(fields: [userId], references: [id])
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderProduct OrderProduct[]
   product      Product[]
   Order        Order[]
 
-  @@unique([gstNumber, userId])
+  @@unique([userId])
   @@map("seller")
 }
 
@@ -58,7 +58,7 @@ model Admin {
   userId    String   @map("user_id")
   verified  Boolean  @default(false) @map("verified")
   createdAt DateTime @default(now()) @map("created_at")
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId])
   @@map("admin")
@@ -82,7 +82,7 @@ model UserCredentials {
   firstName   String? @map("first_name")
   lastName    String? @map("last_name")
   phoneNumber String? @map("phone_number")
-  user        User    @relation(fields: [userId], references: [id])
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String  @unique @map("user_id")
 
   @@map("user_credentials")
@@ -95,7 +95,7 @@ model Cart {
   selected  Boolean  @default(true)
   amount    Int      @map("amount")
   createdAt DateTime @default(now()) @map("created_at")
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   product   Product? @relation(fields: [productId], references: [id])
 
   @@unique([userId, productId])
@@ -120,7 +120,7 @@ model Address {
   city     String   @map("city")
   state    String   @map("state")
   lastUsed DateTime @default(now()) @map("last_used")
-  user     User     @relation(fields: [userId], references: [id])
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId   String   @unique @map("user_id")
 
   @@map("address")
