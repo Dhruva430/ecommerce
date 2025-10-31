@@ -26,9 +26,9 @@ export class ProductController {
     return this.productService.restoreProducts();
   }
 
-  @Get('/:id')
-  getProductById(@Param('id') id: string) {
-    return this.productService.getProductById(id);
+  @Get('/:productId')
+  getProductById(@Param('productId') productId: string) {
+    return this.productService.getProductById(productId);
   }
   @Get('/category/:category')
   getProductsByCategory(@Param('category') category: string) {

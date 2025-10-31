@@ -5,8 +5,9 @@ import { ProductModule } from './product/product.module';
 import { CartModule } from './cart/cart.module';
 import { UserModule } from './user/user.module';
 import { SellerModule } from './seller/seller.module';
+import { OrderModule } from './order/order.module';
 
 @Module({
-  imports: [AuthModule, ProductModule, CartModule, UserModule, SellerModule],
+  imports: [AuthModule, ProductModule, CartModule, UserModule, SellerModule, OrderModule],
 })
 export class AppModule {}

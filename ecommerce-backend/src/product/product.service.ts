@@ -67,7 +67,7 @@ export class ProductService {
   }
   async getProductByCategory(category: string) {
     const product = await prisma.product.findMany({
-      where: { category: Category.ELECTRONICS },
+      where: { category: category as Category },
     });
     if (!product) {
       throw new Error('Product not found');

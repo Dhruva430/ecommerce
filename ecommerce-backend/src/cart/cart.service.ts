@@ -3,10 +3,10 @@ import productData from '../data/products.json';
 import { prisma } from 'libs/primsa';
 @Injectable()
 export class CartService {
-  async addToCart(productId: string) {
+  async addToCart(productId: string, amount: number = 1) {
     const cartItem = await prisma.cart.create({
       data: {
-        amount: 1,
+        amount: amount,
         productId: productId,
         userId: 'user-123',
       },

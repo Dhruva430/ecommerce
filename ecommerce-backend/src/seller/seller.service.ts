@@ -4,7 +4,15 @@ import { CreateProductDto } from 'src/common/dto/create-product.dto';
 
 export default class SellerService {
   getProducts(sellerId: string) {
-    // Implementation here
+    const products = prisma.product.findMany({
+      where: { sellerId: sellerId },
+      include: {
+        productVariant: {
+          include: { variantImages: true, variantAttribute: true },
+        },
+      },
+    });
+    return products;
   }
 
   async createProduct(userId: string, dto: CreateProductDto) {
