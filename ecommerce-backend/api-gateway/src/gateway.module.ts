@@ -50,4 +50,4 @@ import { GatewayService } from './gateway.service';
   controllers: [GatewayController],
   providers: [GatewayService],
 })
-export class AppModule {}
+export class GatewayModule {}
