@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./services/api-gateway-e2e"
+    },
+    {
+      "path": "./services/api-gateway"
+    },
+    {
+      "path": "./services/user-service-e2e"
+    },
+    {
+      "path": "./services/user-service"
+    }
+  ]
+}
