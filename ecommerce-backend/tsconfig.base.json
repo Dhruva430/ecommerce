@@ -16,6 +16,11 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
-    "customConditions": ["@ecommerce-backend/source"]
+    "customConditions": ["@ecommerce-backend/source"],
+    "paths": {
+      "@ecommerce-backend/shared/*": ["shared/src/*"],
+      "@ecommerce-backend/shared": ["shared/src/index.ts"]
+    },
+    "baseUrl": "."
   }
 }

@@ -56,6 +56,16 @@
         "services/api-gateway-e2e/**/*",
         "services/user-service-e2e/**/*"
       ]
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "include": ["shared/*"],
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        }
+      },
+      "exclude": ["shared/*"]
     }
   ],
   "targetDefaults": {
