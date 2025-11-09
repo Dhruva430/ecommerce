@@ -1,0 +1,66 @@
+model Product {
+  id          String @id @default(uuid()) @map("id")
+  title       String @map("title")
+  description String @map("description")
+  price       Float  @map("price")
+  imageUrl    String @map("image_url")
+  discounted  Int?   @default(0) @map("discounted")
+  sellerId    String @map("seller_id")
+
+  createdAt      DateTime         @default(now())
+  category       Category
+  productVariant ProductVariant[]
+  seller         Seller           @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  cart           Cart[]
+
+  @@unique([sellerId])
+  @@map("product")
+}
+
+model ProductVariant {
+  id               String             @id @default(uuid())
+  size             String             @map("size")
+  description      String             @map("description")
+  title            String             @map("title")
+  price            Float              @map("price")
+  stock            Int                @map("stock")
+  productId        String             @map("product_id")
+  product          Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantAttribute VariantAttribute[]
+  variantImages    VariantImages[]
+
+  OrderProduct OrderProduct[]
+
+  @@map("product_variant")
+}
+
+model VariantImages {
+  id        String         @id @default(uuid()) @map("id")
+  imageUrl  String         @map("image_url")
+  position  Int            @default(0) @map("position")
+  variantId String         @map("variant_id")
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@map("variant_images")
+}
+
+model VariantAttribute {
+  id        String         @id @default(uuid()) @map("id")
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  name      String         @map("name")
+  value     String         @map("value")
+  variantId String         @map("variant_id")
+
+  @@map("variant_attribute")
+}
+
+enum Category {
+  ELECTRONICS
+  FASHION
+  HOME
+  BEAUTY
+  SPORTS
+  TOYS
+  BOOKS
+  GROCERY
+}

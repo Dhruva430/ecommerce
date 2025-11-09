@@ -18,7 +18,7 @@
     "target": "es2022",
     "customConditions": ["@ecommerce-backend/source"],
     "paths": {
-      "@ecommerce-backend/shared/*": ["shared/src/*"]
+      "@ecommerce-backend/packages*": ["packages/src/*"]
     },
     "baseUrl": "."
   }
