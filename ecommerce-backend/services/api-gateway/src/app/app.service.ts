@@ -1,10 +1,10 @@
-import { shared } from '@ecommerce-backend/shared';
 import { Injectable } from '@nestjs/common';
+import { packages } from '@ecommerce-backend/shared';
 
 @Injectable()
 export class AppService {
   getData(): { message: string } {
-    const data = shared();
+    const data = packages();
     console.log('Shared module says:', data);
     return { message: 'Hello API' };
   }

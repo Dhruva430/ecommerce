@@ -16,7 +16,7 @@
       "path": "./services/user-service"
     },
     {
-      "path": "./shared"
+      "path": "./packages"
     }
   ]
 }

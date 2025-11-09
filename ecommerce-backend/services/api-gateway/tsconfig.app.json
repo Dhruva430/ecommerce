@@ -22,7 +22,7 @@
   ],
   "references": [
     {
-      "path": "../../shared/tsconfig.lib.json"
+      "path": "../../packages/tsconfig.lib.json"
     }
   ]
 }
