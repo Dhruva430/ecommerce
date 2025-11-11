@@ -54,7 +54,8 @@
       },
       "exclude": [
         "services/api-gateway-e2e/**/*",
-        "services/user-service-e2e/**/*"
+        "services/user-service-e2e/**/*",
+        "services/auth-service-e2e/**/*"
       ]
     },
     {

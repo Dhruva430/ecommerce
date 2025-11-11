@@ -17,6 +17,12 @@
     },
     {
       "path": "./packages"
+    },
+    {
+      "path": "./services/auth-service-e2e"
+    },
+    {
+      "path": "./services/auth-service"
     }
   ]
 }
