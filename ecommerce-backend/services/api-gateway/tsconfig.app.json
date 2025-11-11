@@ -23,6 +23,9 @@
   "references": [
     {
       "path": "../../packages/tsconfig.lib.json"
+    },
+    {
+      "path": "../user-service/tsconfig.app.json"
     }
   ]
 }
