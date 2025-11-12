@@ -4,7 +4,7 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 generator client {
-  provider = "prisma-client-js"
+  provider           = "prisma-client-js"
   prismaSchemaFolder = "./"
   // previewFeatures = ["prismaSchemaFolder"]
 }
@@ -15,13 +15,13 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid()) @map("id")
-  email     String   @map("email")
-  createdAt DateTime @default(now()) @map("created_at")
-  role      Role     @default(USER) @map("role")
-  addressId String?  @unique @map("address_id")
-  verified  Boolean  @default(false) @map("verified")
-
+  id           String           @id @default(uuid()) @map("id")
+  email        String           @map("email")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  role         Role             @default(BUYER) @map("role")
+  addressId    String?          @unique @map("address_id")
+  verified     Boolean          @default(false) @map("verified")
+  isBanned     Boolean          @default(false) @map("is_banned")
   credentials  UserCredentials?
   cart         Cart[]
   address      Address?
@@ -30,15 +30,28 @@ model User {
 
   sellerProfile Seller[]
   adminProfile  Admin?
+  buyer         Buyer?
 
   @@unique([email])
   @@map("user")
 }
 
+model Buyer {
+  id            String   @id @default(uuid()) @map("id")
+  userId        String   @unique @map("user_id")
+  loyaltyPoints Int      @default(0) @map("loyalty_points")
+  totalOrders   Int      @default(0) @map("total_orders")
+  wishlist      Json?    @map("wishlist")
+  createdAt     DateTime @default(now()) @map("created_at")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("buyer")
+}
+
 model Seller {
   id           String         @id @default(uuid()) @map("id")
   userId       String         @map("user_id")
-  shopName     String         @map("shop_name")
+  shopName     String?        @map("shop_name")
   shopLogo     String?        @map("shop_logo")
   description  String?        @map("description")
   gstNumber    String?        @map("gst_number")
@@ -72,7 +85,7 @@ enum SellerStatus {
 }
 
 enum Role {
-  USER
+  BUYER
   SELLER
   ADMIN
 }
