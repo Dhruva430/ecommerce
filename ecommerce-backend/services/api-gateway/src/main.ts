@@ -1,31 +1,27 @@
-/**
- * This is not a production server yet!
- * This is only a minimal backend to get started.
- */
-
-import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
-import { AllExceptionsFilter } from './common/filters/all-exception.filter';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import helmet from 'helmet';
+import compression from 'compression';
+import { ProxyService } from '@ecommerce-backend/shared';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  dotenv.config({
+    path: path.join(__dirname, '..', '.env'),
+  });
 
+  const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-    })
-  );
-  app.useGlobalInterceptors(new LoggingInterceptor());
-  app.useGlobalFilters(new AllExceptionsFilter());
+  app.use(helmet());
+  app.use(compression());
 
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
-  Logger.log(`🚀 Gateway running on http://localhost:${port}/api`);
+  const proxyService = app.get(ProxyService);
+
+  const expressApp = app.getHttpAdapter().getInstance();
+  proxyService.register(expressApp);
+
+  await app.listen(process.env.PORT || 3000);
+  console.log('API Gateway running on http://localhost:3000');
 }
-
 bootstrap();
