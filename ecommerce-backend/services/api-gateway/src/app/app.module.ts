@@ -1,7 +1,13 @@
-import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import {
+  Module,
+  MiddlewareConsumer,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { RateLimitMiddleware, ProxyService } from '@ecommerce-backend/shared';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthMiddleware } from '../common/middleware/auth.middleware';
 
 @Module({
   imports: [],
@@ -11,5 +17,14 @@ import { AppService } from './app.service';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(RateLimitMiddleware).forRoutes('*');
+    consumer
+      .apply(AuthMiddleware)
+      .exclude(
+        { path: 'health', method: RequestMethod.ALL },
+        { path: 'auth/login', method: RequestMethod.ALL },
+        { path: 'auth/signup', method: RequestMethod.ALL },
+        { path: 'auth/request-otp', method: RequestMethod.ALL }
+      )
+      .forRoutes('*');
   }
 }

@@ -1,7 +1,6 @@
 export * from './lib/prisma.js';
 export * from './lib/packages.js';
 export * from './lib/configs.js';
-export * from './guards/auth.guard.js';
 export * from './decorators/roles.decorator.js';
 export * from './guards/roles.guard.js';
 export * from './pipes/zod-validation.pipe.js';

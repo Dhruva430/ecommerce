@@ -1,5 +1,4 @@
-import { AuthGuard } from '@ecommerce-backend/shared';
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Req } from '@nestjs/common';
 
 @Controller()
 export class AppController {
@@ -9,7 +8,6 @@ export class AppController {
   }
 
   @Get('me')
-  @UseGuards(AuthGuard)
   getProfile(@Req() req: Request) {
     return {
       message: 'Protected route accessed successfully',
