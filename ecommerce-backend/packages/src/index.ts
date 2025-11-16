@@ -8,5 +8,4 @@ export * from './interceptors/logging.interceptor.js';
 export * from './middlewares/request-logger.middleware.js';
 export * from './lib/global-exception.filter.js';
 export * from './middlewares/rate-limit.middleware.js';
-export * from './proxy/proxy.service.js';
 export * from './decorators/public.decorator.js';

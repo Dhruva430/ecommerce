@@ -1,20 +1,23 @@
-/**
- * This is not a production server yet!
- * This is only a minimal backend to get started.
- */
-
-import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+import helmet from 'helmet';
+import compression from 'compression';
 
 async function bootstrap() {
+  dotenv.config({
+    path: path.join(__dirname, '..', '.env'),
+  });
+
   const app = await NestFactory.create(AppModule);
-  const globalPrefix = 'api';
-  app.setGlobalPrefix(globalPrefix);
-  const port = process.env.PORT || 3001;
-  await app.listen(port);
-  Logger.log(
-    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`
+  app.use(helmet());
+  app.use(compression());
+  app.setGlobalPrefix('api');
+
+  await app.listen(process.env.PORT || 4001);
+  console.log(
+    'Auth Service running on http://localhost:' + (process.env.PORT || 4001)
   );
 }
 

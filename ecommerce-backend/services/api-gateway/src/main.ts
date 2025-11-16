@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import helmet from 'helmet';
 import compression from 'compression';
-import { ProxyService } from '@ecommerce-backend/shared';
+import { ProxyService } from './common/proxy/proxy.service';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
