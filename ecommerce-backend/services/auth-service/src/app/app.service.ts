@@ -1,18 +1,69 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 
-import { LoginSchema, LoginDto } from '../common/dtos/login';
-import { SignupSchema, SignupDto } from '../common/dtos/signup';
-import { RequestOtpSchema, RequestOtpDto } from '../common/dtos/request-otp';
+import { type LoginDto } from '../common/dtos/login';
+import { type SignupDto } from '../common/dtos/signup';
+import { type RequestOtpDto } from '../common/dtos/request-otp';
 import * as jwt from 'jsonwebtoken';
-import { Role } from '@prisma/client';
+import { Role, SellerStatus } from '@prisma/client';
+import { prisma } from '@ecommerce-backend/shared';
 
 @Injectable()
 export class AppService {
   private otps = new Map<string, string>();
 
-  signup(dto: SignupDto) {
-    // replace with DB check later
-    return { message: 'User registered' };
+  async signup(dto: SignupDto) {
+    const existingUser = await prisma.user.findFirst({
+      where: { email: dto.email },
+    });
+    if (existingUser) {
+      throw new UnauthorizedException('Email already in use');
+    }
+
+    const user = await prisma.user.create({
+      data: {
+        email: dto.email,
+        role: dto.role,
+        credentials: {
+          create: {
+            password: dto.password,
+          },
+        },
+      },
+    });
+    switch (dto.role) {
+      case Role.SELLER:
+        await prisma.seller.create({
+          data: {
+            userId: user.id,
+            status: SellerStatus.PENDING,
+          },
+        });
+        break;
+      case Role.ADMIN:
+        await prisma.admin.create({
+          data: {
+            userId: user.id,
+          },
+        });
+        break;
+
+      case Role.BUYER:
+        await prisma.buyer.create({
+          data: {
+            userId: user.id,
+          },
+        });
+        break;
+      default:
+        console.log('No role matched');
+        break;
+    }
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
+    );
+    return { message: 'Signup successful', token: token };
   }
 
   login(dto: LoginDto) {
@@ -33,7 +84,7 @@ export class AppService {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     this.otps.set(dto.email, otp);
 
-    return { message: 'OTP generated', otp }; // remove otp in production
+    return { message: 'OTP generated', otp };
   }
 
   verifyOtp(email: string, otp: string) {

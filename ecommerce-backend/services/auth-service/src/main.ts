@@ -13,7 +13,6 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(helmet());
   app.use(compression());
-  app.setGlobalPrefix('api');
 
   await app.listen(process.env.PORT || 4001);
   console.log(

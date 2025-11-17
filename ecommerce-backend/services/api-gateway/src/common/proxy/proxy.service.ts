@@ -6,11 +6,11 @@ import { Application, Request, Response } from 'express';
 export class ProxyService {
   register(app: Application) {
     app.use(
-      '/auth',
+      '/api',
       createProxyMiddleware({
         target: process.env.AUTH_SERVICE_URL,
         changeOrigin: true,
-        pathRewrite: { '^/auth': '' },
+        pathRewrite: { '^/api': '' },
         on: {
           proxyReq: (proxyReq, req: Request, res: Response) => {
             const authHeader = req.headers['authorization'];

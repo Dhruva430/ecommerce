@@ -2,11 +2,11 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ZodValidationPipe } from '@ecommerce-backend/shared';
 import { LoginSchema, type LoginDto } from '../common/dtos/login';
-import { SignupSchema, type SignupDto } from '../common/dtos/signup';
 import {
   RequestOtpSchema,
   type RequestOtpDto,
 } from '../common/dtos/request-otp';
+import { type SignupDto, SignupSchema } from '../common/dtos/signup';
 
 @Controller('auth')
 export class AppController {
