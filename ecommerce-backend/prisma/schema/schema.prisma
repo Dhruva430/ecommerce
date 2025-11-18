@@ -31,9 +31,23 @@ model User {
   sellerProfile Seller[]
   adminProfile  Admin?
   buyer         Buyer?
+  refreshTokens RefreshToken[]
 
   @@unique([email])
   @@map("user")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @map("token")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+  @@map("refresh_token")
 }
 
 model Buyer {

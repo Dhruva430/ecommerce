@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { type LoginDto } from '../common/dtos/login';
 import { type SignupDto } from '../common/dtos/signup';
@@ -6,9 +10,10 @@ import { type RequestOtpDto } from '../common/dtos/request-otp';
 import * as jwt from 'jsonwebtoken';
 import { Role, SellerStatus } from '@prisma/client';
 import { prisma } from '@ecommerce-backend/shared';
-
+import { TokenUtil } from '../common/utils/token';
 @Injectable()
 export class AppService {
+  constructor(private tokenUtil: TokenUtil) {}
   private otps = new Map<string, string>();
 
   async signup(dto: SignupDto) {
@@ -16,7 +21,7 @@ export class AppService {
       where: { email: dto.email },
     });
     if (existingUser) {
-      throw new UnauthorizedException('Email already in use');
+      throw new ConflictException('Email already in use');
     }
 
     const user = await prisma.user.create({
@@ -58,26 +63,53 @@ export class AppService {
         console.log('No role matched');
         break;
     }
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
-    );
+
+    const token = this.tokenUtil.generateTokenPair({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
     return { message: 'Signup successful', token: token };
   }
 
-  login(dto: LoginDto) {
-    // Replace with DB auth logic
-    if (dto.email !== 'test@test.com' || dto.password !== '123456')
-      throw new UnauthorizedException('Invalid credentials');
+  async login(dto: LoginDto) {
+    const user = await prisma.user.findFirst({
+      where: { email: dto.email, role: dto.role },
+      include: { credentials: true },
+    });
+    if (!user || user.credentials!.password !== dto.password) {
+      throw new NotFoundException('User does not exist');
+    }
+    const token = this.tokenUtil.generateTokenPair({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+    return { message: 'Login successful', token: token };
+  }
 
-    const token = jwt.sign(
-      { id: 'user123', email: dto.email, role: Role.BUYER },
-      process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
-    );
+  async me(req: Request) {
+    const userId = req.headers.get('x-user-id')?.toString();
+    if (!userId) {
+      throw new NotFoundException('UserId not found');
+    }
+    const role = req.headers.get('x-user-role') as Role;
+    const user = await prisma.user.findUnique({
+      where: { id: userId, role: role },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+      },
+    });
+    return user;
+  }
+  async logout(userId: string) {
+    await prisma.refreshToken.deleteMany({
+      where: { userId },
+    });
 
-    return { accessToken: token };
+    return { message: 'Logged out successfully' };
   }
 
   requestOtp(dto: RequestOtpDto) {
@@ -90,7 +122,7 @@ export class AppService {
   verifyOtp(email: string, otp: string) {
     const stored = this.otps.get(email);
     if (!stored || stored !== otp) {
-      throw new UnauthorizedException('Invalid OTP');
+      throw new NotFoundException('User does not exist');
     }
 
     this.otps.delete(email);

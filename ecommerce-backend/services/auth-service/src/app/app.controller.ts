@@ -1,11 +1,8 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ZodValidationPipe } from '@ecommerce-backend/shared';
 import { LoginSchema, type LoginDto } from '../common/dtos/login';
-import {
-  RequestOtpSchema,
-  type RequestOtpDto,
-} from '../common/dtos/request-otp';
+
 import { type SignupDto, SignupSchema } from '../common/dtos/signup';
 
 @Controller('auth')
@@ -21,16 +18,12 @@ export class AppController {
   login(@Body(new ZodValidationPipe(LoginSchema)) dto: LoginDto) {
     return this.authService.login(dto);
   }
-
-  @Post('request-otp')
-  requestOtp(
-    @Body(new ZodValidationPipe(RequestOtpSchema)) dto: RequestOtpDto
-  ) {
-    return this.authService.requestOtp(dto);
+  @Get('me')
+  me(@Req() req: Request) {
+    return this.authService.me(req);
   }
-
-  @Post('verify-otp')
-  verifyOtp(@Body('email') email: string, @Body('otp') otp: string) {
-    return this.authService.verifyOtp(email, otp);
+  @Get('logout')
+  logout(@Req() req: Request) {
+    return this.authService.logout(req);
   }
 }
