@@ -48,5 +48,9 @@ export class ProxyService {
       '/api/users',
       this.createServiceProxy(process.env.USER_SERVICE_URL!)
     );
+    app.use(
+      '/api/products',
+      this.createServiceProxy(process.env.PRODUCT_SERVICE_URL!)
+    );
   }
 }
