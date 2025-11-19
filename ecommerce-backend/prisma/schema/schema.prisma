@@ -32,6 +32,7 @@ model User {
   adminProfile  Admin?
   buyer         Buyer?
   refreshTokens RefreshToken[]
+  reviews       Reviews[]
 
   @@unique([email])
   @@map("user")
@@ -130,6 +131,20 @@ model Cart {
   @@map("cart")
 }
 
+model Reviews {
+  id        String   @id @default(uuid()) @map("id")
+  userId    String   @map("user_id")
+  productId String   @map("product_id")
+  rating    Int      @map("rating")
+  comment   String?  @map("comment")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("reviews")
+}
+
 model CheckoutInfo {
   id     String @id @default(uuid())
   data   Json   @map("data")
@@ -140,16 +155,18 @@ model CheckoutInfo {
 }
 
 model Address {
-  id       String   @id @default(uuid()) @map("id")
-  pincode  Int      @map("pincode")
-  houseNo  String   @map("house_no")
-  area     String   @map("area")
-  landmark String?  @map("landmark")
-  city     String   @map("city")
-  state    String   @map("state")
-  lastUsed DateTime @default(now()) @map("last_used")
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId   String   @unique @map("user_id")
+  id          String   @id @default(uuid()) @map("id")
+  name        String   @map("name")
+  pincode     Int      @map("pincode")
+  houseNo     String   @map("house_no")
+  area        String   @map("area")
+  landmark    String?  @map("landmark")
+  city        String   @map("city")
+  state       String   @map("state")
+  phoneNumber BigInt   @map("phone_number")
+  userId      String   @unique @map("user_id")
+  lastUsed    DateTime @default(now()) @map("last_used")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("address")
 }

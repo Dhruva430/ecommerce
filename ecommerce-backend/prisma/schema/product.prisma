@@ -12,6 +12,7 @@ model Product {
   productVariant ProductVariant[]
   seller         Seller           @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   cart           Cart[]
+  review         Reviews[]
 
   @@unique([sellerId])
   @@map("product")

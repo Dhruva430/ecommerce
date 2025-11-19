@@ -104,9 +104,10 @@ export class AppService {
     });
     return user;
   }
-  async logout(userId: string) {
+  async logout(req: Request) {
+    const userId = req.headers.get('x-user-id')?.toString();
     await prisma.refreshToken.deleteMany({
-      where: { userId },
+      where: { userId: userId },
     });
 
     return { message: 'Logged out successfully' };
