@@ -23,6 +23,12 @@
     },
     {
       "path": "./services/auth-service"
+    },
+    {
+      "path": "./services/product-service-e2e"
+    },
+    {
+      "path": "./services/product-service"
     }
   ]
 }
