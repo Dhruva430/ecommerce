@@ -1,5 +1,5 @@
 import { z } from 'zod';
-const createAddressSchema = z.object({
+export const createAddressSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   city: z.string().min(1, 'City is required'),
   state: z.string().min(1, 'State is required'),

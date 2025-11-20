@@ -12,25 +12,46 @@ export class ProxyService {
     if (req.user) {
       proxyReq.setHeader('x-user-id', req.user.id);
       proxyReq.setHeader('x-user-role', req.user.role);
-      proxyReq.setHeader('x-user-email', req.user.email);
     }
 
     // 🔥 Forward JSON body for POST/PUT/PATCH
-    if (req.body && Object.keys(req.body).length) {
+    if (
+      req.body &&
+      Object.keys(req.body).length &&
+      ['POST', 'PUT', 'PATCH'].includes(req.method)
+    ) {
       const bodyData = JSON.stringify(req.body);
       proxyReq.setHeader('Content-Type', 'application/json');
       proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
       proxyReq.write(bodyData);
     }
   }
-  private createServiceProxy(targetUrl: string) {
+  private createServiceProxy(
+    targetUrl: string,
+    mountPath: string,
+    servicePath = ''
+  ) {
+    const rewriteRule: Record<string, string> = {};
+    rewriteRule[`^${mountPath}`] = servicePath || '';
+
     return createProxyMiddleware({
       target: targetUrl,
       changeOrigin: true,
-      pathRewrite: { '^/api': '' },
+      // logger: console,
+      pathRewrite: rewriteRule,
       on: {
         proxyReq: (proxyReq, req: Request, res: Response) => {
+          console.log(
+            `[PROXY] → ${req.method} ${req.originalUrl} -> ${proxyReq.getHeader(
+              'host'
+            )}`
+          );
           this.forwardRequest(proxyReq, req);
+        },
+        proxyRes: (proxyRes, req: Request, res: Response) => {
+          console.log(
+            `[PROXY] ← ${req.method} ${req.originalUrl} (${proxyRes.statusCode})`
+          );
         },
         error: (err, req, res) => {
           console.error('Proxy error:', err);
@@ -42,15 +63,19 @@ export class ProxyService {
   register(app: Application) {
     app.use(
       '/api/auth',
-      this.createServiceProxy(process.env.AUTH_SERVICE_URL!)
+      this.createServiceProxy(process.env.AUTH_SERVICE_URL!, '/', '/auth/')
     );
     app.use(
-      '/api/users',
-      this.createServiceProxy(process.env.USER_SERVICE_URL!)
+      '/api/user',
+      this.createServiceProxy(process.env.USER_SERVICE_URL!, '/', '/user/')
     );
     app.use(
       '/api/products',
-      this.createServiceProxy(process.env.PRODUCT_SERVICE_URL!)
+      this.createServiceProxy(
+        process.env.PRODUCT_SERVICE_URL!,
+        '/',
+        '/products/'
+      )
     );
   }
 }

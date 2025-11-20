@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ZodValidationPipe } from '@ecommerce-backend/shared';
 import { LoginSchema, type LoginDto } from '../common/dtos/login';
@@ -22,8 +22,13 @@ export class AppController {
   me(@Req() req: Request) {
     return this.authService.me(req);
   }
+
   @Get('logout')
   logout(@Req() req: Request) {
     return this.authService.logout(req);
+  }
+  @Get('refresh')
+  refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    return this.authService.refresh(req, res);
   }
 }

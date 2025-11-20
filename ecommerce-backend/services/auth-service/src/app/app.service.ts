@@ -66,7 +66,6 @@ export class AppService {
 
     const token = this.tokenUtil.generateTokenPair({
       id: user.id,
-      email: user.email,
       role: user.role,
     });
     return { message: 'Signup successful', token: token };
@@ -82,7 +81,6 @@ export class AppService {
     }
     const token = this.tokenUtil.generateTokenPair({
       id: user.id,
-      email: user.email,
       role: user.role,
     });
     return { message: 'Login successful', token: token };
@@ -98,7 +96,6 @@ export class AppService {
       where: { id: userId, role: role },
       select: {
         id: true,
-        email: true,
         role: true,
       },
     });
@@ -135,5 +132,15 @@ export class AppService {
     );
 
     return { accessToken: token };
+  }
+  async refresh(req: Request, res: Response) {
+    const rawRefreshToken = req.headers.get('x-refresh-token')?.toString();
+    if (!rawRefreshToken) {
+      throw new NotFoundException('Refresh token not found');
+    }
+    const tokens = await this.tokenUtil.refresh(rawRefreshToken);
+    res.headers.set('x-access-token', tokens.accessToken);
+    res.headers.set('x-refresh-token', await tokens.refreshToken);
+    return { message: 'Tokens refreshed' };
   }
 }

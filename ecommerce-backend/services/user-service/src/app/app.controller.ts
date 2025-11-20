@@ -9,14 +9,25 @@ import {
   Req,
 } from '@nestjs/common';
 import { AppService } from './app.service';
-import { type createAddressDto } from '../common/dtos/create-address.dto';
-import { type updateAddressDto } from '../common/dtos/update-address.dto';
+import {
+  createAddressSchema,
+  type createAddressDto,
+} from '../common/dtos/create-address.dto';
+import {
+  updateAddressSchema,
+  type updateAddressDto,
+} from '../common/dtos/update-address.dto';
 import { type updateUserDto } from '../common/dtos/update-user.dto';
+import { ZodValidationPipe } from '@ecommerce-backend/shared';
 
-@Controller('users')
+@Controller('user')
 export class AppController {
   constructor(private readonly userService: AppService) {}
   // ------------------- User Management -------------------
+  @Get('ping')
+  ping() {
+    return 'pong';
+  }
   @Get(':id')
   getUser(@Param('id') id: string) {
     return this.userService.getUser(id);
@@ -35,14 +46,17 @@ export class AppController {
     return this.userService.getUserAddress(req);
   }
   @Post('address')
-  addUserAddress(@Req() req: Request, @Body() dto: createAddressDto) {
+  addUserAddress(
+    @Req() req: Request,
+    @Body(new ZodValidationPipe(createAddressSchema)) dto: createAddressDto
+  ) {
     return this.userService.addUserAddress(req, dto);
   }
   @Patch(':addressId/address')
   updateUserAddress(
     @Param('addressId') addressId: string,
     @Req() req: Request,
-    @Body() dto: updateAddressDto
+    @Body(new ZodValidationPipe(updateAddressSchema)) dto: updateAddressDto
   ) {
     return this.userService.updateUserAddress(addressId, dto, req);
   }
@@ -53,6 +67,7 @@ export class AppController {
   ) {
     return this.userService.deleteUserAddress(req, addressId);
   }
+
   // ------------------- Wishlist Management -------------------
   // @Get(':id/wishlist')
   // getUserWishlist(@Param('id') id: string) {

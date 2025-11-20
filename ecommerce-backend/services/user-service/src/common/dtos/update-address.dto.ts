@@ -1,5 +1,5 @@
 import z from 'zod';
-const updateAddressSchema = z.object({
+export const updateAddressSchema = z.object({
   name: z.string().min(1, 'Name is required').optional(),
   city: z.string().min(1, 'City is required').optional(),
   state: z.string().min(1, 'State is required').optional(),

@@ -22,13 +22,11 @@ export class AuthMiddleware implements NestMiddleware {
       ) as JwtPayload & {
         id: string;
         role: string;
-        email?: string;
       };
 
       req.user = {
         id: payload.id,
         role: payload.role,
-        email: payload.email,
       };
 
       next();
