@@ -228,9 +228,6 @@ importers:
       '@nestjs/core':
         specifier: ^11.0.0
         version: 11.1.8(@nestjs/common@11.1.8(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/microservices@11.1.8)(@nestjs/platform-express@11.1.8)(reflect-metadata@0.1.14)(rxjs@7.8.2)
-      '@nestjs/microservices':
-        specifier: ^11.1.8
-        version: 11.1.8(@nestjs/common@11.1.8(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@11.1.8)(reflect-metadata@0.1.14)(rxjs@7.8.2)
       '@nestjs/platform-express':
         specifier: ^11.0.0
         version: 11.1.8(@nestjs/common@11.1.8(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@11.1.8)
@@ -264,6 +261,9 @@ importers:
 
   services/product-service:
     dependencies:
+      '@ecommerce-backend/shared':
+        specifier: workspace:*
+        version: link:../../packages
       '@nestjs/common':
         specifier: ^11.0.0
         version: 11.1.8(reflect-metadata@0.1.14)(rxjs@7.8.2)

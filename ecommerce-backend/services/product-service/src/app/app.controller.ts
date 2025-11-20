@@ -1,12 +1,22 @@
-import { Controller, Get } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { AppService } from './app.service';
 
-@Controller()
+@Controller('/products')
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly productService: AppService) {}
 
   @Get()
-  getData() {
-    return this.appService.getData();
+  getAllProducts(
+    @Query('limit', ParseIntPipe) limit: number,
+    @Query('cursor') cursor?: string
+  ) {
+    return this.productService.getAllProducts(limit, cursor);
   }
 }
