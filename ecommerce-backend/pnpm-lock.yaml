@@ -50,6 +50,9 @@ importers:
       rxjs:
         specifier: ^7.8.0
         version: 7.8.1
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
     devDependencies:
       '@nestjs/schematics':
         specifier: ^11.0.0
@@ -5347,6 +5350,9 @@ packages:
 
   zeptomatch@2.0.2:
     resolution: {integrity: sha512-H33jtSKf8Ijtb5BW6wua3G5DhnFjbFML36eFu+VdOoVY4HD9e7ggjqdM6639B+L87rjnR6Y+XeRzBXZdy52B/g==}
+
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
 
 snapshots:
 
@@ -11288,3 +11294,5 @@ snapshots:
   zeptomatch@2.0.2:
     dependencies:
       grammex: 3.1.11
+
+  zod@4.1.12: {}
