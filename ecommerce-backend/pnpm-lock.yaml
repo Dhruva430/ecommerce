@@ -14,6 +14,9 @@ importers:
       '@nestjs/core':
         specifier: ^11.0.0
         version: 11.1.9(@nestjs/common@11.1.9(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/microservices@11.1.9)(@nestjs/platform-express@11.1.9)(reflect-metadata@0.1.14)(rxjs@7.8.1)
+      '@nestjs/jwt':
+        specifier: ^11.0.1
+        version: 11.0.1(@nestjs/common@11.1.9(reflect-metadata@0.1.14)(rxjs@7.8.1))
       '@nestjs/microservices':
         specifier: ^11.1.9
         version: 11.1.9(@nestjs/common@11.1.9(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@11.1.9)(ioredis@5.8.2)(reflect-metadata@0.1.14)(rxjs@7.8.1)
@@ -1040,6 +1043,11 @@ packages:
         optional: true
       '@nestjs/websockets':
         optional: true
+
+  '@nestjs/jwt@11.0.1':
+    resolution: {integrity: sha512-HXSsc7SAnCnjA98TsZqrE7trGtHDnYXWp4Ffy6LwSmck1QvbGYdMzBquXofX5l6tIRpeY4Qidl2Ti2CVG77Pdw==}
+    peerDependencies:
+      '@nestjs/common': ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0
 
   '@nestjs/microservices@11.1.9':
     resolution: {integrity: sha512-2n9ftdRej+vv+MMO863dDvxBaJ/VHkzroo/Nyl59mE23mCYno3NZEn0QgCYByktoE8r7Cc0kSOqrTVE++KALug==}
@@ -6551,6 +6559,12 @@ snapshots:
     optionalDependencies:
       '@nestjs/microservices': 11.1.9(@nestjs/common@11.1.9(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@11.1.9)(ioredis@5.8.2)(reflect-metadata@0.1.14)(rxjs@7.8.1)
       '@nestjs/platform-express': 11.1.9(@nestjs/common@11.1.9(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@11.1.9)
+
+  '@nestjs/jwt@11.0.1(@nestjs/common@11.1.9(reflect-metadata@0.1.14)(rxjs@7.8.1))':
+    dependencies:
+      '@nestjs/common': 11.1.9(reflect-metadata@0.1.14)(rxjs@7.8.1)
+      '@types/jsonwebtoken': 9.0.10
+      jsonwebtoken: 9.0.2
 
   '@nestjs/microservices@11.1.9(@nestjs/common@11.1.9(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@11.1.9)(ioredis@5.8.2)(reflect-metadata@0.1.14)(rxjs@7.8.1)':
     dependencies:

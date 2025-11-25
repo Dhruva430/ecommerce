@@ -12,13 +12,14 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import {
   CreateAddressSchema,
+  Public,
   type CreateAddressDto,
-} from '../common/dtos/create-address.dto';
+} from '@ecommerce-backend/shared-dtos';
 import {
   UpdateAddressSchema,
   UpdateAddressDto,
-} from '../common/dtos/update-address.dto';
-import { UpdateUserDto } from '../common/dtos/update-user.dto';
+} from '@ecommerce-backend/shared-dtos';
+import { UpdateUserDto } from '@ecommerce-backend/shared-dtos';
 import { ZodValidationPipe } from '@ecommerce-backend/shared-dtos';
 
 @Controller('user')
@@ -26,11 +27,6 @@ export class UserGatewayController {
   constructor(
     @Inject('USER_SERVICE') private readonly userClient: ClientProxy
   ) {}
-
-  @Get('ping')
-  ping() {
-    return this.userClient.send('user.ping', {});
-  }
 
   @Get(':id')
   getUser(@Param('id') id: string) {
