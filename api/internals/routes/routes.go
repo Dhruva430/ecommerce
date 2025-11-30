@@ -4,17 +4,18 @@ import (
 	"api/errors"
 	"api/internals/controllers"
 	"api/internals/service"
+	"api/models/db"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter() *gin.Engine {
+func SetupRouter(queries *db.Queries) *gin.Engine {
 
 	r := gin.Default()
 	r.Use(errors.GlobalErrorHandler())
 	routerAPI := r.Group("/api")
 
-	authService := service.NewAuthService()
+	authService := service.NewAuthService(queries)
 
 	{ // Auth Routes
 		authController := controllers.NewAuthController(authService)

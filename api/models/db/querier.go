@@ -9,11 +9,9 @@ import (
 )
 
 type Querier interface {
-	AddToCart(ctx context.Context, arg AddToCartParams) error
-	CreateUser(ctx context.Context, arg CreateUserParams) (int64, error)
-	CreateUserCredentials(ctx context.Context, arg CreateUserCredentialsParams) error
+	CreateAccount(ctx context.Context, arg CreateAccountParams) error
+	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	GetCart(ctx context.Context, userID int64) ([]GetCartRow, error)
-	GetUserForLogin(ctx context.Context, email string) (GetUserForLoginRow, error)
 	RemoveFromCart(ctx context.Context, arg RemoveFromCartParams) error
 	UpdateCart(ctx context.Context, arg UpdateCartParams) error
 }

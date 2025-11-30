@@ -10,28 +10,32 @@ import (
 	"database/sql"
 )
 
-const addToCart = `-- name: AddToCart :exec
-INSERT INTO cart (user_id, product_id, amount)
-VALUES ($1, $2, $3)
-ON CONFLICT (user_id, product_id)
-DO UPDATE SET amount = cart.amount + excluded.amount
+const createAccount = `-- name: CreateAccount :exec
+INSERT INTO account (account_id, provider, password, user_id)
+VALUES ($1, $2, $3, $4)
 `
 
-type AddToCartParams struct {
-	UserID    int64 `json:"user_id"`
-	ProductID int64 `json:"product_id"`
-	Amount    int32 `json:"amount"`
+type CreateAccountParams struct {
+	AccountID string         `json:"account_id"`
+	Provider  Provider       `json:"provider"`
+	Password  sql.NullString `json:"password"`
+	UserID    int64          `json:"user_id"`
 }
 
-func (q *Queries) AddToCart(ctx context.Context, arg AddToCartParams) error {
-	_, err := q.db.ExecContext(ctx, addToCart, arg.UserID, arg.ProductID, arg.Amount)
+func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) error {
+	_, err := q.db.ExecContext(ctx, createAccount,
+		arg.AccountID,
+		arg.Provider,
+		arg.Password,
+		arg.UserID,
+	)
 	return err
 }
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO "user" (email, role)
-VALUES ($1, $2)
-RETURNING id
+VALUES ($1, $2) 
+RETURNING id, email, role
 `
 
 type CreateUserParams struct {
@@ -39,35 +43,17 @@ type CreateUserParams struct {
 	Role  Role   `json:"role"`
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, error) {
+type CreateUserRow struct {
+	ID    int64  `json:"id"`
+	Email string `json:"email"`
+	Role  Role   `json:"role"`
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
 	row := q.db.QueryRowContext(ctx, createUser, arg.Email, arg.Role)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
-const createUserCredentials = `-- name: CreateUserCredentials :exec
-INSERT INTO user_credentials (password, first_name, last_name, phone_number, user_id)
-VALUES ($1, $2, $3, $4, $5)
-`
-
-type CreateUserCredentialsParams struct {
-	Password    string         `json:"password"`
-	FirstName   sql.NullString `json:"first_name"`
-	LastName    sql.NullString `json:"last_name"`
-	PhoneNumber sql.NullString `json:"phone_number"`
-	UserID      int64          `json:"user_id"`
-}
-
-func (q *Queries) CreateUserCredentials(ctx context.Context, arg CreateUserCredentialsParams) error {
-	_, err := q.db.ExecContext(ctx, createUserCredentials,
-		arg.Password,
-		arg.FirstName,
-		arg.LastName,
-		arg.PhoneNumber,
-		arg.UserID,
-	)
-	return err
+	var i CreateUserRow
+	err := row.Scan(&i.ID, &i.Email, &i.Role)
+	return i, err
 }
 
 const getCart = `-- name: GetCart :many
@@ -120,37 +106,6 @@ func (q *Queries) GetCart(ctx context.Context, userID int64) ([]GetCartRow, erro
 		return nil, err
 	}
 	return items, nil
-}
-
-const getUserForLogin = `-- name: GetUserForLogin :one
-SELECT u.id, u.email, u.role, u.verified, u.is_banned, c.password
-FROM "user" u
-JOIN user_credentials c ON c.user_id = u.id
-WHERE u.email = $1
-LIMIT 1
-`
-
-type GetUserForLoginRow struct {
-	ID       int64  `json:"id"`
-	Email    string `json:"email"`
-	Role     Role   `json:"role"`
-	Verified bool   `json:"verified"`
-	IsBanned bool   `json:"is_banned"`
-	Password string `json:"password"`
-}
-
-func (q *Queries) GetUserForLogin(ctx context.Context, email string) (GetUserForLoginRow, error) {
-	row := q.db.QueryRowContext(ctx, getUserForLogin, email)
-	var i GetUserForLoginRow
-	err := row.Scan(
-		&i.ID,
-		&i.Email,
-		&i.Role,
-		&i.Verified,
-		&i.IsBanned,
-		&i.Password,
-	)
-	return i, err
 }
 
 const removeFromCart = `-- name: RemoveFromCart :exec

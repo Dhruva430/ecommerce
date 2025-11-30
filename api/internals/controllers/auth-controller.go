@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"api/internals/data/request"
 	"api/internals/service"
 	"net/http"
 
@@ -18,8 +19,12 @@ func NewAuthController(service service.AuthService) *AuthController {
 }
 
 func (a *AuthController) Register(c *gin.Context) {
-
-	err := a.service.Register()
+	var req request.RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(err)
+		return
+	}
+	err := a.service.Register(c, req)
 	if err != nil {
 		c.Error(err)
 		return

@@ -146,6 +146,50 @@ func (ns NullPaymentStatus) Value() (driver.Value, error) {
 	return string(ns.PaymentStatus), nil
 }
 
+type Provider string
+
+const (
+	ProviderGOOGLE      Provider = "GOOGLE"
+	ProviderFACEBOOK    Provider = "FACEBOOK"
+	ProviderGITHUB      Provider = "GITHUB"
+	ProviderCREDENTIALS Provider = "CREDENTIALS"
+)
+
+func (e *Provider) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = Provider(s)
+	case string:
+		*e = Provider(s)
+	default:
+		return fmt.Errorf("unsupported scan type for Provider: %T", src)
+	}
+	return nil
+}
+
+type NullProvider struct {
+	Provider Provider `json:"provider"`
+	Valid    bool     `json:"valid"` // Valid is true if Provider is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullProvider) Scan(value interface{}) error {
+	if value == nil {
+		ns.Provider, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.Provider.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullProvider) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.Provider), nil
+}
+
 type Role string
 
 const (
@@ -232,6 +276,18 @@ func (ns NullSellerStatus) Value() (driver.Value, error) {
 	return string(ns.SellerStatus), nil
 }
 
+type Account struct {
+	ID          int64          `json:"id"`
+	AccountID   string         `json:"account_id"`
+	Provider    Provider       `json:"provider"`
+	IDToken     sql.NullString `json:"id_token"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	Password    sql.NullString `json:"password"`
+	PhoneNumber sql.NullString `json:"phone_number"`
+	UserID      int64          `json:"user_id"`
+}
+
 type Address struct {
 	ID          int64          `json:"id"`
 	Name        string         `json:"name"`
@@ -278,14 +334,15 @@ type CheckoutInfo struct {
 }
 
 type Order struct {
-	ID            int64         `json:"id"`
-	UserID        int64         `json:"user_id"`
-	Address       string        `json:"address"`
-	SellerID      sql.NullInt64 `json:"seller_id"`
-	TotalAmount   float64       `json:"total_amount"`
-	CreatedAt     time.Time     `json:"created_at"`
-	Status        OrderStatus   `json:"status"`
-	PaymentStatus PaymentStatus `json:"payment_status"`
+	ID            int64           `json:"id"`
+	UserID        int64           `json:"user_id"`
+	Address       json.RawMessage `json:"address"`
+	SellerID      sql.NullInt64   `json:"seller_id"`
+	AddressID     sql.NullInt64   `json:"address_id"`
+	TotalAmount   float64         `json:"total_amount"`
+	CreatedAt     time.Time       `json:"created_at"`
+	Status        OrderStatus     `json:"status"`
+	PaymentStatus PaymentStatus   `json:"payment_status"`
 }
 
 type OrderProduct struct {
@@ -313,6 +370,7 @@ type Product struct {
 	Description string        `json:"description"`
 	Price       float64       `json:"price"`
 	ImageUrl    string        `json:"image_url"`
+	IsActive    bool          `json:"is_active"`
 	Discounted  sql.NullInt32 `json:"discounted"`
 	SellerID    int64         `json:"seller_id"`
 	CreatedAt   time.Time     `json:"created_at"`
@@ -377,15 +435,6 @@ type User struct {
 	AddressID sql.NullInt64 `json:"address_id"`
 	Verified  bool          `json:"verified"`
 	IsBanned  bool          `json:"is_banned"`
-}
-
-type UserCredential struct {
-	ID          int64          `json:"id"`
-	Password    string         `json:"password"`
-	FirstName   sql.NullString `json:"first_name"`
-	LastName    sql.NullString `json:"last_name"`
-	PhoneNumber sql.NullString `json:"phone_number"`
-	UserID      int64          `json:"user_id"`
 }
 
 type VariantAttribute struct {
