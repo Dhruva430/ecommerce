@@ -10,10 +10,12 @@ import (
 
 type Querier interface {
 	CreateAccount(ctx context.Context, arg CreateAccountParams) error
+	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
-	GetCart(ctx context.Context, userID int64) ([]GetCartRow, error)
-	RemoveFromCart(ctx context.Context, arg RemoveFromCartParams) error
-	UpdateCart(ctx context.Context, arg UpdateCartParams) error
+	DeleteRefreshTokensByID(ctx context.Context, id string) error
+	GetRefreshToken(ctx context.Context, id string) (GetRefreshTokenRow, error)
+	GetUserByAccountID(ctx context.Context, accountID string) (GetUserByAccountIDRow, error)
+	UpdateRefreshTokenRevoked(ctx context.Context, arg UpdateRefreshTokenRevokedParams) error
 }
 
 var _ Querier = (*Queries)(nil)

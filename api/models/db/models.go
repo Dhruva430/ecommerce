@@ -388,12 +388,12 @@ type ProductVariant struct {
 }
 
 type RefreshToken struct {
-	ID        int64          `json:"id"`
+	ID        string         `json:"id"`
 	Token     string         `json:"token"`
 	UserID    int64          `json:"user_id"`
 	Revoked   bool           `json:"revoked"`
 	IpAddress sql.NullString `json:"ip_address"`
-	Device    sql.NullString `json:"device"`
+	LastUsed  sql.NullTime   `json:"last_used"`
 	CreatedAt time.Time      `json:"created_at"`
 	ExpiresAt time.Time      `json:"expires_at"`
 }
@@ -430,6 +430,7 @@ type SellerDocument struct {
 type User struct {
 	ID        int64         `json:"id"`
 	Email     string        `json:"email"`
+	Username  string        `json:"username"`
 	CreatedAt time.Time     `json:"created_at"`
 	Role      Role          `json:"role"`
 	AddressID sql.NullInt64 `json:"address_id"`

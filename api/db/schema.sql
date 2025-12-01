@@ -36,6 +36,7 @@ CREATE TABLE
   "user" (
     id BIGSERIAL PRIMARY KEY,
     email TEXT NOT NULL UNIQUE,
+    username TEXT NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW (),
     role role NOT NULL DEFAULT 'BUYER',
     address_id BIGINT,
@@ -61,12 +62,12 @@ CREATE TABLE
 
 CREATE TABLE
   refresh_token (
-    id BIGSERIAL PRIMARY KEY,
+    id TEXT PRIMARY KEY,
     token TEXT NOT NULL,
     user_id BIGINT NOT NULL,
     revoked BOOLEAN NOT NULL DEFAULT FALSE,
     ip_address TEXT,
-    device TEXT,
+    last_used TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT NOW (),
     expires_at TIMESTAMP NOT NULL,
     CONSTRAINT fk_refresh_user FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE

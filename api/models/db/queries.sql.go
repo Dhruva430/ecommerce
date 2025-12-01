@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 const createAccount = `-- name: CreateAccount :exec
@@ -28,6 +29,30 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) er
 		arg.Provider,
 		arg.Password,
 		arg.UserID,
+	)
+	return err
+}
+
+const createRefreshToken = `-- name: CreateRefreshToken :exec
+INSERT INTO refresh_token (id,token, user_id, ip_address, expires_at)
+VALUES ($1, $2, $3, $4,$5)
+`
+
+type CreateRefreshTokenParams struct {
+	ID        string         `json:"id"`
+	Token     string         `json:"token"`
+	UserID    int64          `json:"user_id"`
+	IpAddress sql.NullString `json:"ip_address"`
+	ExpiresAt time.Time      `json:"expires_at"`
+}
+
+func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) error {
+	_, err := q.db.ExecContext(ctx, createRefreshToken,
+		arg.ID,
+		arg.Token,
+		arg.UserID,
+		arg.IpAddress,
+		arg.ExpiresAt,
 	)
 	return err
 }
@@ -56,86 +81,92 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 	return i, err
 }
 
-const getCart = `-- name: GetCart :many
-SELECT c.id AS cart_id, c.amount, p.id AS product_id, p.title, p.price, p.discounted,
-       p.image_url, s.shop_name
-FROM cart c
-JOIN product p ON p.id = c.product_id
-JOIN seller s ON s.id = p.seller_id
-WHERE c.user_id = $1
+const deleteRefreshTokensByID = `-- name: DeleteRefreshTokensByID :exec
+DELETE FROM refresh_token
+WHERE id = $1
 `
 
-type GetCartRow struct {
-	CartID     int64          `json:"cart_id"`
-	Amount     int32          `json:"amount"`
-	ProductID  int64          `json:"product_id"`
-	Title      string         `json:"title"`
-	Price      float64        `json:"price"`
-	Discounted sql.NullInt32  `json:"discounted"`
-	ImageUrl   string         `json:"image_url"`
-	ShopName   sql.NullString `json:"shop_name"`
-}
-
-func (q *Queries) GetCart(ctx context.Context, userID int64) ([]GetCartRow, error) {
-	rows, err := q.db.QueryContext(ctx, getCart, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetCartRow
-	for rows.Next() {
-		var i GetCartRow
-		if err := rows.Scan(
-			&i.CartID,
-			&i.Amount,
-			&i.ProductID,
-			&i.Title,
-			&i.Price,
-			&i.Discounted,
-			&i.ImageUrl,
-			&i.ShopName,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const removeFromCart = `-- name: RemoveFromCart :exec
-DELETE FROM cart WHERE user_id = $1 AND product_id = $2
-`
-
-type RemoveFromCartParams struct {
-	UserID    int64 `json:"user_id"`
-	ProductID int64 `json:"product_id"`
-}
-
-func (q *Queries) RemoveFromCart(ctx context.Context, arg RemoveFromCartParams) error {
-	_, err := q.db.ExecContext(ctx, removeFromCart, arg.UserID, arg.ProductID)
+func (q *Queries) DeleteRefreshTokensByID(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, deleteRefreshTokensByID, id)
 	return err
 }
 
-const updateCart = `-- name: UpdateCart :exec
-UPDATE cart
-SET amount = $3
-WHERE user_id = $1
-AND product_id = $2
+const getRefreshToken = `-- name: GetRefreshToken :one
+SELECT id, token, user_id, revoked, ip_address, created_at, expires_at
+FROM refresh_token
+WHERE id = $1
 `
 
-type UpdateCartParams struct {
-	UserID    int64 `json:"user_id"`
-	ProductID int64 `json:"product_id"`
-	Amount    int32 `json:"amount"`
+type GetRefreshTokenRow struct {
+	ID        string         `json:"id"`
+	Token     string         `json:"token"`
+	UserID    int64          `json:"user_id"`
+	Revoked   bool           `json:"revoked"`
+	IpAddress sql.NullString `json:"ip_address"`
+	CreatedAt time.Time      `json:"created_at"`
+	ExpiresAt time.Time      `json:"expires_at"`
 }
 
-func (q *Queries) UpdateCart(ctx context.Context, arg UpdateCartParams) error {
-	_, err := q.db.ExecContext(ctx, updateCart, arg.UserID, arg.ProductID, arg.Amount)
+func (q *Queries) GetRefreshToken(ctx context.Context, id string) (GetRefreshTokenRow, error) {
+	row := q.db.QueryRowContext(ctx, getRefreshToken, id)
+	var i GetRefreshTokenRow
+	err := row.Scan(
+		&i.ID,
+		&i.Token,
+		&i.UserID,
+		&i.Revoked,
+		&i.IpAddress,
+		&i.CreatedAt,
+		&i.ExpiresAt,
+	)
+	return i, err
+}
+
+const getUserByAccountID = `-- name: GetUserByAccountID :one
+SELECT u.id, u.email, u.role, a.account_id, a.provider, a.password,u.username
+FROM "user" u
+JOIN account a ON u.id = a.user_id
+WHERE a.account_id = $1
+`
+
+type GetUserByAccountIDRow struct {
+	ID        int64          `json:"id"`
+	Email     string         `json:"email"`
+	Role      Role           `json:"role"`
+	AccountID string         `json:"account_id"`
+	Provider  Provider       `json:"provider"`
+	Password  sql.NullString `json:"password"`
+	Username  string         `json:"username"`
+}
+
+func (q *Queries) GetUserByAccountID(ctx context.Context, accountID string) (GetUserByAccountIDRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserByAccountID, accountID)
+	var i GetUserByAccountIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Role,
+		&i.AccountID,
+		&i.Provider,
+		&i.Password,
+		&i.Username,
+	)
+	return i, err
+}
+
+const updateRefreshTokenRevoked = `-- name: UpdateRefreshTokenRevoked :exec
+UPDATE refresh_token
+SET revoked = $2 , last_used = $3
+WHERE id = $1
+`
+
+type UpdateRefreshTokenRevokedParams struct {
+	ID       string       `json:"id"`
+	Revoked  bool         `json:"revoked"`
+	LastUsed sql.NullTime `json:"last_used"`
+}
+
+func (q *Queries) UpdateRefreshTokenRevoked(ctx context.Context, arg UpdateRefreshTokenRevokedParams) error {
+	_, err := q.db.ExecContext(ctx, updateRefreshTokenRevoked, arg.ID, arg.Revoked, arg.LastUsed)
 	return err
 }

@@ -7,19 +7,26 @@ RETURNING id, email, role;
 INSERT INTO account (account_id, provider, password, user_id)
 VALUES ($1, $2, $3, $4);
 
--- name: UpdateCart :exec
-UPDATE cart
-SET amount = $3
-WHERE user_id = $1
-AND product_id = $2;
+-- name: GetUserByAccountID :one
+SELECT u.id, u.email, u.role, a.account_id, a.provider, a.password,u.username
+FROM "user" u
+JOIN account a ON u.id = a.user_id
+WHERE a.account_id = $1;
 
--- name: RemoveFromCart :exec
-DELETE FROM cart WHERE user_id = $1 AND product_id = $2;
+-- name: CreateRefreshToken :exec
+INSERT INTO refresh_token (id,token, user_id, ip_address, expires_at)
+VALUES ($1, $2, $3, $4,$5);
 
--- name: GetCart :many
-SELECT c.id AS cart_id, c.amount, p.id AS product_id, p.title, p.price, p.discounted,
-       p.image_url, s.shop_name
-FROM cart c
-JOIN product p ON p.id = c.product_id
-JOIN seller s ON s.id = p.seller_id
-WHERE c.user_id = $1;
+-- name: DeleteRefreshTokensByID :exec
+DELETE FROM refresh_token
+WHERE id = $1;
+
+-- name: UpdateRefreshTokenRevoked :exec
+UPDATE refresh_token
+SET revoked = $2 , last_used = $3
+WHERE id = $1;
+
+-- name: GetRefreshToken :one
+SELECT id, token, user_id, revoked, ip_address, created_at, expires_at
+FROM refresh_token
+WHERE id = $1;
