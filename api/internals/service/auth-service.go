@@ -67,37 +67,44 @@ func (a *AuthService) Register(ctx context.Context, req request.RegisterRequest)
 
 func (a *AuthService) Login(ctx context.Context, req request.LoginRequest) (response.UserResponse, error) {
 	var res response.UserResponse
-	user, err := a.Queries.GetUserByAccountID(ctx, req.Email)
-	if err != nil {
-		return res, &errors.AppError{Message: "user not found", Code: http.StatusNotFound}
-	}
-	if user.Provider != db.ProviderCREDENTIALS {
-		return res, &errors.AppError{Message: "Email already in used", Code: http.StatusUnauthorized}
-	}
-	isMatch := util.ComparePassword(user.Password.String, req.Password)
-	if !isMatch {
-		return res, &errors.AppError{Message: "invalid password", Code: http.StatusUnauthorized}
-	}
+	{
+		user, err := a.Queries.GetUserByAccountID(ctx, req.Email)
+		if err != nil {
+			return res, &errors.AppError{Message: "user not found", Code: http.StatusNotFound}
+		}
+		if user.Provider != db.ProviderCREDENTIALS {
+			return res, &errors.AppError{Message: "Email already in used", Code: http.StatusUnauthorized}
+		}
+		isMatch := util.ComparePassword(user.Password.String, req.Password)
+		if !isMatch {
+			return res, &errors.AppError{Message: "invalid password", Code: http.StatusUnauthorized}
+		}
 
-	refreshToken, claims, err := util.GenerateRefreshToken(int32(user.ID), req.IP)
-	if err != nil {
-		return res, &errors.AppError{Message: "failed to generate refresh token", Code: http.StatusInternalServerError}
-	}
+		refreshToken, claims, err := util.GenerateRefreshToken(int32(user.ID), req.IP)
+		if err != nil {
+			return res, &errors.AppError{Message: "failed to generate refresh token", Code: http.StatusInternalServerError}
+		}
+		accessToken, _, err := util.GenerateAccessToken(int32(user.ID), req.IP, claims.Permissions)
+		if err != nil {
+			return res, &errors.AppError{Message: "failed to generate access token", Code: http.StatusInternalServerError}
+		}
 
-	a.Queries.CreateRefreshToken(ctx, db.CreateRefreshTokenParams{
-		ID:        claims.ID,
-		Token:     refreshToken,
-		UserID:    user.ID,
-		IpAddress: sql.NullString{String: req.IP, Valid: true},
-		ExpiresAt: claims.ExpiresAt.Time,
-	})
-	res = response.UserResponse{
-		ID:             user.ID,
-		Email:          user.Email,
-		Username:       user.Username,
-		Role:           string(user.Role),
-		RefreshToken:   refreshToken,
-		TokenExpiresAt: claims.ExpiresAt.Time,
+		a.Queries.CreateRefreshToken(ctx, db.CreateRefreshTokenParams{
+			ID:        claims.ID,
+			Token:     refreshToken,
+			UserID:    user.ID,
+			IpAddress: sql.NullString{String: req.IP, Valid: true},
+			ExpiresAt: claims.ExpiresAt.Time,
+		})
+		res = response.UserResponse{
+			ID:             user.ID,
+			Email:          user.Email,
+			Username:       user.Username,
+			Role:           string(user.Role),
+			RefreshToken:   refreshToken,
+			AccessToken:    accessToken,
+			TokenExpiresAt: claims.ExpiresAt.Time,
+		}
 	}
 	return res, nil
 }
@@ -153,10 +160,26 @@ func (a *AuthService) RefreshToken(ctx context.Context, refreshToken string, ip 
 	return res, nil
 }
 
-func Me() {
-	// Implementation for me
+func (a *AuthService) GetUserByID(ctx context.Context, userID int64) (response.UserDetails, error) {
+	user, err := a.Queries.GetUserByID(ctx, userID)
+	if err != nil {
+		return response.UserDetails{}, &errors.AppError{Message: "user not found", Code: http.StatusNotFound}
+	}
+	return response.UserDetails{
+		ID:       user.ID,
+		Email:    user.Email,
+		Username: user.Username,
+		Role:     string(user.Role),
+	}, nil
 }
 
-func Logout() {
-	// Implementation for logout
+func (a *AuthService) Logout(ctx context.Context, refreshToken string) error {
+	claims, err := util.ParseJWT(refreshToken)
+	if err != nil {
+		return &errors.AppError{Message: "invalid refresh token", Code: http.StatusUnauthorized}
+	}
+	if err := a.Queries.DeleteRefreshTokensByID(ctx, claims.ID); err != nil {
+		return &errors.AppError{Message: "failed to delete refresh token", Code: http.StatusInternalServerError}
+	}
+	return nil
 }

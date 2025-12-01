@@ -54,7 +54,7 @@ func (a *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User Logged in "})
+	c.JSON(http.StatusOK, gin.H{"message": "User Logged in", "access_token": user.AccessToken, "expire_in": user.TokenExpiresAt})
 
 	c.SetCookie("refresh_token", user.RefreshToken, int(time.Until(user.TokenExpiresAt)), "/", "", false, true)
 }
@@ -74,4 +74,41 @@ func (a *AuthController) RefreshTokenHandler(c *gin.Context) {
 
 	c.SetCookie("refresh_token", token.RefreshToken, int(time.Until(token.TokenExpiresAt)), "/", "", false, true)
 	c.JSON(http.StatusOK, gin.H{"message": "Token refreshed", "access_token": token.AccessToken, "expire_in": token.TokenExpiresAt})
+}
+
+func (a *AuthController) Logout(c *gin.Context) {
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		c.Error(&errors.AppError{Message: "refresh token not found", Code: http.StatusInternalServerError})
+		return
+	}
+
+	err = a.service.Logout(c, refreshToken)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+	c.JSON(http.StatusOK, gin.H{"message": "User logged out"})
+}
+func (a *AuthController) Me(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.Error(&errors.AppError{Message: "user not found in context", Code: http.StatusUnauthorized})
+		return
+	}
+
+	user, err := a.service.GetUserByID(c, userID.(int64))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":       user.ID,
+		"email":    user.Email,
+		"username": user.Username,
+		"role":     user.Role,
+	})
 }

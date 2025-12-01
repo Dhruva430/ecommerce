@@ -13,6 +13,11 @@ FROM "user" u
 JOIN account a ON u.id = a.user_id
 WHERE a.account_id = $1;
 
+-- name: GetUserByID :one
+SELECT id, email, role, username
+FROM "user"
+WHERE id = $1;
+
 -- name: CreateRefreshToken :exec
 INSERT INTO refresh_token (id,token, user_id, ip_address, expires_at)
 VALUES ($1, $2, $3, $4,$5);

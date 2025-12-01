@@ -2,8 +2,11 @@ package util
 
 import (
 	"api/configs"
+	"errors"
+	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
@@ -68,4 +71,16 @@ func ParseJWT(tokenString string) (*JWTClaims, error) {
 	} else {
 		return nil, err
 	}
+}
+
+func ExtractTokenFromHeader(c *gin.Context) (string, error) {
+	bearer := c.GetHeader("Authorization")
+	if bearer == "" {
+		return "", errors.New("authorization header missing")
+	}
+	parts := strings.Split(bearer, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		return "", errors.New("invalid authorization header format")
+	}
+	return parts[1], nil
 }

@@ -15,6 +15,7 @@ type Querier interface {
 	DeleteRefreshTokensByID(ctx context.Context, id string) error
 	GetRefreshToken(ctx context.Context, id string) (GetRefreshTokenRow, error)
 	GetUserByAccountID(ctx context.Context, accountID string) (GetUserByAccountIDRow, error)
+	GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, error)
 	UpdateRefreshTokenRevoked(ctx context.Context, arg UpdateRefreshTokenRevokedParams) error
 }
 
