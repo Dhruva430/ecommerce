@@ -19,7 +19,10 @@ func SetupRouter(queries *db.Queries, conn *sql.DB) *gin.Engine {
 	routerAPI := r.Group("/api")
 
 	authService := service.NewAuthService(queries, conn)
+	userService := service.NewUserService(queries, conn)
+
 	authController := controllers.NewAuthController(authService)
+	userController := controllers.NewUserController(userService)
 
 	// -------------------- PUBLIC ROUTES -------------------- //
 	authRoutes := routerAPI.Group("/auth")
@@ -35,7 +38,14 @@ func SetupRouter(queries *db.Queries, conn *sql.DB) *gin.Engine {
 
 	{
 		protected.GET("/me", authController.Me)
+		protected.POST("/logout", authController.Logout)
+	}
+	{
 
+		protected.DELETE("/user", userController.DeleteUser)
+		protected.GET("/user/addresses", userController.GetUserAddress)
+		protected.PUT("/user/addresses", userController.UpdateUserAddress)
+		protected.GET("/user/orders", userController.GetOrderHistory)
 	}
 
 	return r
