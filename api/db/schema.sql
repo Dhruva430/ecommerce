@@ -24,9 +24,9 @@ CREATE INDEX idx_cart_user ON cart (user_id);
 
 CREATE INDEX idx_cart_product ON cart (product_id);
 
-CREATE INDEX idx_order_user ON "order" (user_id);
+CREATE INDEX idx_order_user ON orders (user_id);
 
-CREATE INDEX idx_order_seller ON "order" (seller_id);
+CREATE INDEX idx_order_seller ON orders (seller_id);
 
 CREATE INDEX idx_product_seller ON product (seller_id);
 
@@ -41,9 +41,19 @@ CREATE TABLE
     role role NOT NULL DEFAULT 'BUYER',
     address_id BIGINT,
     verified BOOLEAN NOT NULL DEFAULT FALSE,
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
     is_banned BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT fk_user_address FOREIGN KEY (address_id) REFERENCES address (id)
   );
+
+CREATE
+OR REPLACE VIEW user_view AS
+SELECT
+  *
+FROM
+  "user"
+WHERE
+  is_deleted = FALSE;
 
 CREATE TABLE
   account (
@@ -112,11 +122,10 @@ CREATE TABLE
     id BIGSERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     pincode INT NOT NULL,
-    house_no TEXT NOT NULL,
     area TEXT NOT NULL,
-    landmark TEXT,
     city TEXT NOT NULL,
     state TEXT NOT NULL,
+    country TEXT NOT NULL,
     phone_number BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
     last_used TIMESTAMP NOT NULL DEFAULT NOW (),
@@ -173,7 +182,7 @@ CREATE TABLE
   );
 
 CREATE TABLE
-  "order" (
+  orders (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     address JSONB NOT NULL,
@@ -210,7 +219,7 @@ CREATE TABLE
     order_id BIGINT,
     CONSTRAINT fk_op_seller FOREIGN KEY (seller_id) REFERENCES seller (id),
     CONSTRAINT fk_op_variant FOREIGN KEY (variant_id) REFERENCES product_variant (id),
-    CONSTRAINT fk_op_order FOREIGN KEY (order_id) REFERENCES "order" (id)
+    CONSTRAINT fk_op_order FOREIGN KEY (order_id) REFERENCES orders (id)
   );
 
 CREATE TABLE
@@ -222,7 +231,7 @@ CREATE TABLE
     amount FLOAT NOT NULL,
     status payment_status NOT NULL DEFAULT 'PENDING',
     created_at TIMESTAMP NOT NULL DEFAULT NOW (),
-    CONSTRAINT fk_payment_order FOREIGN KEY (order_id) REFERENCES "order" (id)
+    CONSTRAINT fk_payment_order FOREIGN KEY (order_id) REFERENCES orders (id)
   );
 
 CREATE TABLE

@@ -13,10 +13,14 @@ type Querier interface {
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	DeleteRefreshTokensByID(ctx context.Context, id string) error
+	DeleteUser(ctx context.Context, id int64) error
+	GetOrderHistory(ctx context.Context, userID int64) ([]Order, error)
 	GetRefreshToken(ctx context.Context, id string) (GetRefreshTokenRow, error)
+	GetUserAddresses(ctx context.Context, userID int64) ([]Address, error)
 	GetUserByAccountID(ctx context.Context, accountID string) (GetUserByAccountIDRow, error)
 	GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, error)
 	UpdateRefreshTokenRevoked(ctx context.Context, arg UpdateRefreshTokenRevokedParams) error
+	UpdateUserAddress(ctx context.Context, arg UpdateUserAddressParams) error
 }
 
 var _ Querier = (*Queries)(nil)

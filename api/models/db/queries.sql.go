@@ -91,6 +91,56 @@ func (q *Queries) DeleteRefreshTokensByID(ctx context.Context, id string) error 
 	return err
 }
 
+const deleteUser = `-- name: DeleteUser :exec
+UPDATE "user"
+SET is_deleted = TRUE
+WHERE id = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, id)
+	return err
+}
+
+const getOrderHistory = `-- name: GetOrderHistory :many
+SELECT id, user_id, address, seller_id, address_id, total_amount, created_at, status, payment_status FROM orders
+WHERE user_id = $1
+ORDER BY created_at DESC
+`
+
+func (q *Queries) GetOrderHistory(ctx context.Context, userID int64) ([]Order, error) {
+	rows, err := q.db.QueryContext(ctx, getOrderHistory, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Order
+	for rows.Next() {
+		var i Order
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Address,
+			&i.SellerID,
+			&i.AddressID,
+			&i.TotalAmount,
+			&i.CreatedAt,
+			&i.Status,
+			&i.PaymentStatus,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getRefreshToken = `-- name: GetRefreshToken :one
 SELECT id, token, user_id, revoked, ip_address, created_at, expires_at
 FROM refresh_token
@@ -122,9 +172,48 @@ func (q *Queries) GetRefreshToken(ctx context.Context, id string) (GetRefreshTok
 	return i, err
 }
 
+const getUserAddresses = `-- name: GetUserAddresses :many
+SELECT id, name, pincode, area, city, state, country, phone_number, user_id, last_used FROM address
+WHERE user_id = $1
+`
+
+func (q *Queries) GetUserAddresses(ctx context.Context, userID int64) ([]Address, error) {
+	rows, err := q.db.QueryContext(ctx, getUserAddresses, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Address
+	for rows.Next() {
+		var i Address
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Pincode,
+			&i.Area,
+			&i.City,
+			&i.State,
+			&i.Country,
+			&i.PhoneNumber,
+			&i.UserID,
+			&i.LastUsed,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserByAccountID = `-- name: GetUserByAccountID :one
 SELECT u.id, u.email, u.role, a.account_id, a.provider, a.password,u.username
-FROM "user" u
+FROM "user_view" u
 JOIN account a ON u.id = a.user_id
 WHERE a.account_id = $1
 `
@@ -156,7 +245,7 @@ func (q *Queries) GetUserByAccountID(ctx context.Context, accountID string) (Get
 
 const getUserByID = `-- name: GetUserByID :one
 SELECT id, email, role, username
-FROM "user"
+FROM "user_view"
 WHERE id = $1
 `
 
@@ -193,5 +282,42 @@ type UpdateRefreshTokenRevokedParams struct {
 
 func (q *Queries) UpdateRefreshTokenRevoked(ctx context.Context, arg UpdateRefreshTokenRevokedParams) error {
 	_, err := q.db.ExecContext(ctx, updateRefreshTokenRevoked, arg.ID, arg.Revoked, arg.LastUsed)
+	return err
+}
+
+const updateUserAddress = `-- name: UpdateUserAddress :exec
+UPDATE address
+SET name = $2,
+    pincode = $3,
+    area = $4,
+    city = $5,
+    state = $6,
+    country = $7,
+    phone_number = $8
+WHERE id = $1
+`
+
+type UpdateUserAddressParams struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Pincode     int32  `json:"pincode"`
+	Area        string `json:"area"`
+	City        string `json:"city"`
+	State       string `json:"state"`
+	Country     string `json:"country"`
+	PhoneNumber int64  `json:"phone_number"`
+}
+
+func (q *Queries) UpdateUserAddress(ctx context.Context, arg UpdateUserAddressParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserAddress,
+		arg.ID,
+		arg.Name,
+		arg.Pincode,
+		arg.Area,
+		arg.City,
+		arg.State,
+		arg.Country,
+		arg.PhoneNumber,
+	)
 	return err
 }

@@ -289,17 +289,16 @@ type Account struct {
 }
 
 type Address struct {
-	ID          int64          `json:"id"`
-	Name        string         `json:"name"`
-	Pincode     int32          `json:"pincode"`
-	HouseNo     string         `json:"house_no"`
-	Area        string         `json:"area"`
-	Landmark    sql.NullString `json:"landmark"`
-	City        string         `json:"city"`
-	State       string         `json:"state"`
-	PhoneNumber int64          `json:"phone_number"`
-	UserID      int64          `json:"user_id"`
-	LastUsed    time.Time      `json:"last_used"`
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Pincode     int32     `json:"pincode"`
+	Area        string    `json:"area"`
+	City        string    `json:"city"`
+	State       string    `json:"state"`
+	Country     string    `json:"country"`
+	PhoneNumber int64     `json:"phone_number"`
+	UserID      int64     `json:"user_id"`
+	LastUsed    time.Time `json:"last_used"`
 }
 
 type Admin struct {
@@ -435,6 +434,19 @@ type User struct {
 	Role      Role          `json:"role"`
 	AddressID sql.NullInt64 `json:"address_id"`
 	Verified  bool          `json:"verified"`
+	IsDeleted bool          `json:"is_deleted"`
+	IsBanned  bool          `json:"is_banned"`
+}
+
+type UserView struct {
+	ID        int64         `json:"id"`
+	Email     string        `json:"email"`
+	Username  string        `json:"username"`
+	CreatedAt time.Time     `json:"created_at"`
+	Role      Role          `json:"role"`
+	AddressID sql.NullInt64 `json:"address_id"`
+	Verified  bool          `json:"verified"`
+	IsDeleted bool          `json:"is_deleted"`
 	IsBanned  bool          `json:"is_banned"`
 }
 
