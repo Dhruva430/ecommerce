@@ -11,6 +11,26 @@ import (
 	"time"
 )
 
+const countProducts = `-- name: CountProducts :one
+SELECT COUNT(*) FROM product
+WHERE ($1::text IS NULL OR category_id = $1)
+  AND ($2::bigint IS NULL OR seller_id = $2)
+  AND ($3::boolean IS NULL OR is_active = $3)
+`
+
+type CountProductsParams struct {
+	CategoryID sql.NullString `json:"category_id"`
+	SellerID   sql.NullInt64  `json:"seller_id"`
+	IsActive   sql.NullBool   `json:"is_active"`
+}
+
+func (q *Queries) CountProducts(ctx context.Context, arg CountProductsParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countProducts, arg.CategoryID, arg.SellerID, arg.IsActive)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createAccount = `-- name: CreateAccount :exec
 INSERT INTO account (account_id, provider, password, user_id)
 VALUES ($1, $2, $3, $4)
@@ -31,6 +51,48 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) er
 		arg.UserID,
 	)
 	return err
+}
+
+const createProduct = `-- name: CreateProduct :one
+INSERT INTO product (title, description, price, image_url, category_id, discounted, seller_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, title, description, price, image_url, is_active, discounted, seller_id, created_at, category_id
+`
+
+type CreateProductParams struct {
+	Title       string        `json:"title"`
+	Description string        `json:"description"`
+	Price       float64       `json:"price"`
+	ImageUrl    string        `json:"image_url"`
+	CategoryID  int64         `json:"category_id"`
+	Discounted  sql.NullInt32 `json:"discounted"`
+	SellerID    int64         `json:"seller_id"`
+}
+
+func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error) {
+	row := q.db.QueryRowContext(ctx, createProduct,
+		arg.Title,
+		arg.Description,
+		arg.Price,
+		arg.ImageUrl,
+		arg.CategoryID,
+		arg.Discounted,
+		arg.SellerID,
+	)
+	var i Product
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Description,
+		&i.Price,
+		&i.ImageUrl,
+		&i.IsActive,
+		&i.Discounted,
+		&i.SellerID,
+		&i.CreatedAt,
+		&i.CategoryID,
+	)
+	return i, err
 }
 
 const createRefreshToken = `-- name: CreateRefreshToken :exec
@@ -81,6 +143,17 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 	return i, err
 }
 
+const deleteProduct = `-- name: DeleteProduct :exec
+UPDATE product
+SET is_active = FALSE
+WHERE id = $1
+`
+
+func (q *Queries) DeleteProduct(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteProduct, id)
+	return err
+}
+
 const deleteRefreshTokensByID = `-- name: DeleteRefreshTokensByID :exec
 DELETE FROM refresh_token
 WHERE id = $1
@@ -100,6 +173,65 @@ WHERE id = $1
 func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteUser, id)
 	return err
+}
+
+const getAllProducts = `-- name: GetAllProducts :many
+
+SELECT id, title, description, price, image_url, is_active, discounted, seller_id, created_at, category_id FROM product
+WHERE ($1::text IS NULL OR category_id = $1)
+  AND ($2::bigint IS NULL OR seller_id = $2)
+  AND ($3::boolean IS NULL OR is_active = $3)
+ORDER BY created_at DESC
+LIMIT $5 OFFSET $4
+`
+
+type GetAllProductsParams struct {
+	CategoryID  sql.NullString `json:"category_id"`
+	SellerID    sql.NullInt64  `json:"seller_id"`
+	IsActive    sql.NullBool   `json:"is_active"`
+	OffsetCount int32          `json:"offset_count"`
+	LimitCount  int32          `json:"limit_count"`
+}
+
+// Product Queries
+func (q *Queries) GetAllProducts(ctx context.Context, arg GetAllProductsParams) ([]Product, error) {
+	rows, err := q.db.QueryContext(ctx, getAllProducts,
+		arg.CategoryID,
+		arg.SellerID,
+		arg.IsActive,
+		arg.OffsetCount,
+		arg.LimitCount,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Product
+	for rows.Next() {
+		var i Product
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.Price,
+			&i.ImageUrl,
+			&i.IsActive,
+			&i.Discounted,
+			&i.SellerID,
+			&i.CreatedAt,
+			&i.CategoryID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getOrderHistory = `-- name: GetOrderHistory :many
@@ -141,6 +273,57 @@ func (q *Queries) GetOrderHistory(ctx context.Context, userID int64) ([]Order, e
 	return items, nil
 }
 
+const getProductByID = `-- name: GetProductByID :one
+SELECT id, title, description, price, image_url, is_active, discounted, seller_id, created_at, category_id FROM product
+WHERE id = $1
+`
+
+func (q *Queries) GetProductByID(ctx context.Context, id int64) (Product, error) {
+	row := q.db.QueryRowContext(ctx, getProductByID, id)
+	var i Product
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Description,
+		&i.Price,
+		&i.ImageUrl,
+		&i.IsActive,
+		&i.Discounted,
+		&i.SellerID,
+		&i.CreatedAt,
+		&i.CategoryID,
+	)
+	return i, err
+}
+
+const getProductBySeller = `-- name: GetProductBySeller :one
+SELECT id, title, description, price, image_url, is_active, discounted, seller_id, created_at, category_id FROM product
+WHERE id = $1 AND seller_id = $2
+`
+
+type GetProductBySellerParams struct {
+	ID       int64 `json:"id"`
+	SellerID int64 `json:"seller_id"`
+}
+
+func (q *Queries) GetProductBySeller(ctx context.Context, arg GetProductBySellerParams) (Product, error) {
+	row := q.db.QueryRowContext(ctx, getProductBySeller, arg.ID, arg.SellerID)
+	var i Product
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Description,
+		&i.Price,
+		&i.ImageUrl,
+		&i.IsActive,
+		&i.Discounted,
+		&i.SellerID,
+		&i.CreatedAt,
+		&i.CategoryID,
+	)
+	return i, err
+}
+
 const getRefreshToken = `-- name: GetRefreshToken :one
 SELECT id, token, user_id, revoked, ip_address, created_at, expires_at
 FROM refresh_token
@@ -168,6 +351,28 @@ func (q *Queries) GetRefreshToken(ctx context.Context, id string) (GetRefreshTok
 		&i.IpAddress,
 		&i.CreatedAt,
 		&i.ExpiresAt,
+	)
+	return i, err
+}
+
+const getSellerByUserID = `-- name: GetSellerByUserID :one
+SELECT id, user_id, shop_name, shop_logo, description, gst_number, status, created_at, verified FROM seller
+WHERE user_id = $1
+`
+
+func (q *Queries) GetSellerByUserID(ctx context.Context, userID int64) (Seller, error) {
+	row := q.db.QueryRowContext(ctx, getSellerByUserID, userID)
+	var i Seller
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.ShopName,
+		&i.ShopLogo,
+		&i.Description,
+		&i.GstNumber,
+		&i.Status,
+		&i.CreatedAt,
+		&i.Verified,
 	)
 	return i, err
 }
@@ -264,6 +469,57 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, er
 		&i.Email,
 		&i.Role,
 		&i.Username,
+	)
+	return i, err
+}
+
+const updateProduct = `-- name: UpdateProduct :one
+UPDATE product
+SET title = COALESCE($1, title),
+    description = COALESCE($2, description),
+    price = COALESCE($3, price),
+    image_url = COALESCE($4, image_url),
+    category_id = COALESCE($5, category_id),
+    is_active = COALESCE($6, is_active),
+    discounted = COALESCE($7, discounted)
+WHERE id = $8
+RETURNING id, title, description, price, image_url, is_active, discounted, seller_id, created_at, category_id
+`
+
+type UpdateProductParams struct {
+	Title       sql.NullString  `json:"title"`
+	Description sql.NullString  `json:"description"`
+	Price       sql.NullFloat64 `json:"price"`
+	ImageUrl    sql.NullString  `json:"image_url"`
+	CategoryID  sql.NullInt64   `json:"category_id"`
+	IsActive    sql.NullBool    `json:"is_active"`
+	Discounted  sql.NullInt32   `json:"discounted"`
+	ID          int64           `json:"id"`
+}
+
+func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error) {
+	row := q.db.QueryRowContext(ctx, updateProduct,
+		arg.Title,
+		arg.Description,
+		arg.Price,
+		arg.ImageUrl,
+		arg.CategoryID,
+		arg.IsActive,
+		arg.Discounted,
+		arg.ID,
+	)
+	var i Product
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Description,
+		&i.Price,
+		&i.ImageUrl,
+		&i.IsActive,
+		&i.Discounted,
+		&i.SellerID,
+		&i.CreatedAt,
+		&i.CategoryID,
 	)
 	return i, err
 }

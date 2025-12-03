@@ -373,7 +373,15 @@ type Product struct {
 	Discounted  sql.NullInt32 `json:"discounted"`
 	SellerID    int64         `json:"seller_id"`
 	CreatedAt   time.Time     `json:"created_at"`
-	Category    string        `json:"category"`
+	CategoryID  int64         `json:"category_id"`
+}
+
+type ProductCategory struct {
+	ID        int64         `json:"id"`
+	Name      string        `json:"name"`
+	CreatedBy sql.NullInt64 `json:"created_by"`
+	UpdatedAt time.Time     `json:"updated_at"`
+	CreatedAt time.Time     `json:"created_at"`
 }
 
 type ProductVariant struct {

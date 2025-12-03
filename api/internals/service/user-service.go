@@ -45,6 +45,7 @@ func (s *UserService) GetUserAddress(userID int64) (response.GetUserAddressRespo
 	return response.GetUserAddressResponse{Addresses: respAddresses}, nil
 }
 func (s *UserService) UpdateUserAddress(c context.Context, req request.UpdateAddressRequest) error {
+
 	addressParams := db.UpdateUserAddressParams{
 		ID:          req.AddressID,
 		Name:        req.Name,

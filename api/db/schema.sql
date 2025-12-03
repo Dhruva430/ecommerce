@@ -143,8 +143,18 @@ CREATE TABLE
     discounted INT DEFAULT 0,
     seller_id BIGINT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW (),
-    category TEXT NOT NULL,
+    category_id BIGINT NOT NULL REFERENCES product_category (id),
     CONSTRAINT fk_product_seller FOREIGN KEY (seller_id) REFERENCES seller (id) ON DELETE CASCADE
+  );
+
+CREATE TABLE
+  product_category (
+    id BIGSERIAL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    created_by BIGINT,
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW (),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW (),
+    CONSTRAINT fk_category_creator FOREIGN KEY (created_by) REFERENCES admin (id) ON DELETE SET NULL
   );
 
 CREATE TABLE
