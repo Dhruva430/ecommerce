@@ -434,6 +434,18 @@ type SellerDocument struct {
 	UploadedAt  time.Time    `json:"uploaded_at"`
 }
 
+type Upload struct {
+	ID          int64     `json:"id"`
+	Filename    string    `json:"filename"`
+	Key         string    `json:"key"`
+	ContentType string    `json:"content_type"`
+	FileSize    int64     `json:"file_size"`
+	UploadType  string    `json:"upload_type"`
+	UserID      int64     `json:"user_id"`
+	UploadedAt  time.Time `json:"uploaded_at"`
+	ExpiresAt   time.Time `json:"expires_at"`
+}
+
 type User struct {
 	ID        int64         `json:"id"`
 	Email     string        `json:"email"`
@@ -467,7 +479,7 @@ type VariantAttribute struct {
 
 type VariantImage struct {
 	ID        int64  `json:"id"`
-	ImageUrl  string `json:"image_url"`
+	ImageKey  string `json:"image_key"`
 	Position  int32  `json:"position"`
 	VariantID int64  `json:"variant_id"`
 }

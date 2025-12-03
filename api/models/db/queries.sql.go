@@ -119,6 +119,45 @@ func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshToken
 	return err
 }
 
+const createRequestFileUpload = `-- name: CreateRequestFileUpload :one
+INSERT INTO uploads (key, filename, content_type, file_size, upload_type, expires_at)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, filename, key, content_type, file_size, upload_type, user_id, uploaded_at, expires_at
+`
+
+type CreateRequestFileUploadParams struct {
+	Key         string    `json:"key"`
+	Filename    string    `json:"filename"`
+	ContentType string    `json:"content_type"`
+	FileSize    int64     `json:"file_size"`
+	UploadType  string    `json:"upload_type"`
+	ExpiresAt   time.Time `json:"expires_at"`
+}
+
+func (q *Queries) CreateRequestFileUpload(ctx context.Context, arg CreateRequestFileUploadParams) (Upload, error) {
+	row := q.db.QueryRowContext(ctx, createRequestFileUpload,
+		arg.Key,
+		arg.Filename,
+		arg.ContentType,
+		arg.FileSize,
+		arg.UploadType,
+		arg.ExpiresAt,
+	)
+	var i Upload
+	err := row.Scan(
+		&i.ID,
+		&i.Filename,
+		&i.Key,
+		&i.ContentType,
+		&i.FileSize,
+		&i.UploadType,
+		&i.UserID,
+		&i.UploadedAt,
+		&i.ExpiresAt,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO "user" (email, role)
 VALUES ($1, $2) 

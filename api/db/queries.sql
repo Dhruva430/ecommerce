@@ -115,3 +115,8 @@ WHERE id = $1 AND seller_id = $2;
 -- name: GetSellerByUserID :one
 SELECT * FROM seller
 WHERE user_id = $1;
+
+-- name: CreateRequestFileUpload :one
+INSERT INTO uploads (key, filename, content_type, file_size, upload_type, expires_at)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING *;

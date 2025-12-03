@@ -2,12 +2,14 @@ package main
 
 import (
 	"api/configs"
+	awsclient "api/internals/aws"
 	"api/internals/routes"
 	"api/models/db"
 	"database/sql"
 	"fmt"
 	"log"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 )
 
@@ -38,6 +40,10 @@ func main() {
 
 	conn := connectDB()
 	queries := db.New(conn)
+
+	s3Client := awsclient.GetS3Client()
+	awsclient.ListObjects(s3Client)
+
 	g := routes.SetupRouter(queries, conn)
 	if err := g.Run(":8080"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)

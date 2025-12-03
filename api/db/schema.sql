@@ -247,7 +247,7 @@ CREATE TABLE
 CREATE TABLE
   variant_images (
     id BIGSERIAL PRIMARY KEY,
-    image_url TEXT NOT NULL,
+    image_key TEXT NOT NULL,
     position INT NOT NULL DEFAULT 0,
     variant_id BIGINT NOT NULL,
     CONSTRAINT fk_varimg_variant FOREIGN KEY (variant_id) REFERENCES product_variant (id) ON DELETE CASCADE
@@ -271,3 +271,16 @@ CREATE TABLE
     uploaded_at TIMESTAMP NOT NULL DEFAULT NOW (),
     CONSTRAINT fk_sellerdoc_seller FOREIGN KEY (seller_id) REFERENCES seller (id) ON DELETE CASCADE
   );
+
+CREATE TABLE
+  uploads (
+    id BIGSERIAL PRIMARY KEY,
+    filename TEXT NOT NULL,
+    key TEXT NOT NULL,
+    content_type TEXT NOT NULL,
+    file_size BIGINT NOT NULL,
+    upload_type TEXT NOT NULL,
+    user_id BIGINT NOT NULL REFERENCES "user" (id) ON DELETE CASCADE,
+    uploaded_at TIMESTAMP NOT NULL DEFAULT NOW (),
+    expires_at TIMESTAMP NOT NULL
+  )

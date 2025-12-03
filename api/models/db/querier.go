@@ -13,6 +13,7 @@ type Querier interface {
 	CreateAccount(ctx context.Context, arg CreateAccountParams) error
 	CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error)
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) error
+	CreateRequestFileUpload(ctx context.Context, arg CreateRequestFileUploadParams) (Upload, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	DeleteProduct(ctx context.Context, id int64) error
 	DeleteRefreshTokensByID(ctx context.Context, id string) error
