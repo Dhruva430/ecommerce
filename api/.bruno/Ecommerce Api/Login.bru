@@ -1,0 +1,24 @@
+meta {
+  name: Login
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8080/api/auth/login
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "rdhruva12345@gmail.com",
+    "role": "BUYER",
+    "password": "iamhero"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

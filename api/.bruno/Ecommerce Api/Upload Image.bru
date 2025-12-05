@@ -1,0 +1,29 @@
+meta {
+  name: Upload Image
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/api/upload/request
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ0eXBlIjoiYWNjZXNzIiwiYXVkIjpbIjo6MSJdLCJleHAiOjE3NjQ3NjY4MDcsImlhdCI6MTc2NDc2NTkwN30.Qn8DjNu5Y08VtNkb-mmgMzpt6hrbYgz4vl7H0CGy-wY
+}
+
+body:json {
+  {
+    "content_type": "image/jpeg",
+    "file_size": 89642,
+    "filename":"24",
+    "upload_type":"product-image"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

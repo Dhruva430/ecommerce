@@ -1,0 +1,35 @@
+meta {
+  name: Upload Test
+  type: http
+  seq: 4
+}
+
+post {
+  url: https://ecommerce-dhruva.s3.eu-north-1.amazonaws.com/product-images/e390af04-e76b-4a59-aea7-f02abe02934f?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQ3BPZT6SHSZVXQN5%2F20251204%2Feu-north-1%2Fs3%2Faws4_request&X-Amz-Date=20251204T074129Z&X-Amz-Expires=900&X-Amz-SignedHeaders=content-length%3Bcontent-type%3Bhost&x-id=PutObject&X-Amz-Signature=ba50b3c02aa95227dfc0c8ce3129c82a9aba61c1aeb57f3f627c88323dde76c6
+  body: file
+  auth: inherit
+}
+
+params:query {
+  X-Amz-Algorithm: AWS4-HMAC-SHA256
+  X-Amz-Credential: AKIAQ3BPZT6SHSZVXQN5%2F20251204%2Feu-north-1%2Fs3%2Faws4_request
+  X-Amz-Date: 20251204T074129Z
+  X-Amz-Expires: 900
+  X-Amz-SignedHeaders: content-length%3Bcontent-type%3Bhost
+  x-id: PutObject
+  X-Amz-Signature: ba50b3c02aa95227dfc0c8ce3129c82a9aba61c1aeb57f3f627c88323dde76c6
+}
+
+headers {
+  ~Content-Type: image/jpeg
+  ~Content-Length: 89642
+}
+
+body:file {
+  file: @file(/home/dhruva/Downloads/24.jpg) @contentType(image/jpeg)
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
