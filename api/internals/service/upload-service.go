@@ -8,6 +8,7 @@ import (
 	"api/models/db"
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -45,6 +46,7 @@ func (u *UploadService) RequestFileUpload(ctx context.Context, userID int64, req
 	}
 	data := db.CreateRequestFileUploadParams{
 		Key:         uploadFolder + fileKey,
+		UserID:      userID,
 		Filename:    req.Filename,
 		ContentType: req.ContentType,
 		FileSize:    req.FileSize,
@@ -53,6 +55,7 @@ func (u *UploadService) RequestFileUpload(ctx context.Context, userID int64, req
 	}
 	_, err := u.Queries.CreateRequestFileUpload(ctx, data)
 	if err != nil {
+		fmt.Print(err)
 		return response.RequestFileUploadResponse{}, errors.AppError{Message: "failed to create upload request", Code: 500}
 	}
 	presignedurl, err := awsclient.GeneratePresignedUploadURL(data.Key, data.ContentType, data.FileSize)

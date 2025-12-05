@@ -69,19 +69,12 @@ func (s *ProductService) GetAllProducts(ctx context.Context, page, pageSize int,
 
 	var respProducts []response.ProductResponse
 	for _, product := range products {
-		var discounted *int32
-		if product.Discounted.Valid {
-			discounted = &product.Discounted.Int32
-		}
 
 		respProducts = append(respProducts, response.ProductResponse{
 			ID:          product.ID,
 			Title:       product.Title,
 			Description: product.Description,
-			Price:       product.Price,
-			ImageUrl:    product.ImageUrl,
 			IsActive:    product.IsActive,
-			Discounted:  discounted,
 			SellerID:    product.SellerID,
 			CreatedAt:   product.CreatedAt,
 			CategoryID:  product.CategoryID,
@@ -100,19 +93,11 @@ func (s *ProductService) GetProductByID(ctx context.Context, id int64) (response
 		return response.ProductResponse{}, &errors.AppError{Message: "failed to get product", Code: http.StatusInternalServerError}
 	}
 
-	var discounted *int32
-	if product.Discounted.Valid {
-		discounted = &product.Discounted.Int32
-	}
-
 	return response.ProductResponse{
 		ID:          product.ID,
 		Title:       product.Title,
 		Description: product.Description,
-		Price:       product.Price,
-		ImageUrl:    product.ImageUrl,
 		IsActive:    product.IsActive,
-		Discounted:  discounted,
 		SellerID:    product.SellerID,
 		CreatedAt:   product.CreatedAt,
 		CategoryID:  product.CategoryID,
@@ -132,45 +117,89 @@ func (s *ProductService) CreateProduct(ctx context.Context, req request.CreatePr
 		return response.ProductResponse{}, &errors.AppError{Message: "seller is not approved", Code: http.StatusForbidden}
 	}
 
-	var discounted sql.NullInt32
-	if req.Discounted != nil {
-		discounted = sql.NullInt32{Int32: *req.Discounted, Valid: true}
+	tx, err := s.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return response.ProductResponse{}, &errors.AppError{Message: "failed to start transaction", Code: http.StatusInternalServerError}
 	}
+	qtx := s.Queries.WithTx(tx)
 
-	product, err := s.Queries.CreateProduct(ctx, db.CreateProductParams{
+	productData := db.CreateProductParams{
 		Title:       req.Title,
 		Description: req.Description,
-		Price:       req.Price,
-		ImageUrl:    req.ImageUrl,
 		CategoryID:  req.CategoryID,
-		Discounted:  discounted,
 		SellerID:    seller.ID,
-	})
+	}
+
+	product, err := qtx.CreateProduct(ctx, productData)
 	if err != nil {
+		tx.Rollback()
 		return response.ProductResponse{}, &errors.AppError{Message: "failed to create product", Code: http.StatusInternalServerError}
 	}
 
-	var respDiscounted *int32
-	if product.Discounted.Valid {
-		respDiscounted = &product.Discounted.Int32
+	for _, variant := range req.Variant {
+		variantData := db.CreateProductVariantParams{
+			ProductID:   product.ID,
+			Title:       variant.Title,
+			Description: variant.Description,
+			Size:        variant.Size,
+			Price:       variant.Price,
+			Stock:       variant.Stock,
+		}
+
+		v, err := qtx.CreateProductVariant(ctx, variantData)
+		if err != nil {
+			tx.Rollback()
+			return response.ProductResponse{}, &errors.AppError{Message: "failed to create product variant", Code: http.StatusInternalServerError}
+		}
+		for _, attr := range variant.Attributes {
+			attrData := db.CreateVariantAttributeParams{
+				VariantID: v.ID,
+				Name:      attr.Name,
+				Value:     attr.Value,
+			}
+			_, err := qtx.CreateVariantAttribute(ctx, attrData)
+			if err != nil {
+				tx.Rollback()
+				return response.ProductResponse{}, &errors.AppError{Message: "failed to create variant attribute", Code: http.StatusInternalServerError}
+			}
+		}
+		for _, img := range variant.Images {
+			uploadReq, err := qtx.GetUploadRequestByKey(ctx, img.ImageKey)
+			if err != nil {
+				tx.Rollback()
+				return response.ProductResponse{}, &errors.AppError{Message: "failed to get upload request", Code: http.StatusInternalServerError}
+			}
+			if uploadReq.UserID != seller.ID {
+				tx.Rollback()
+				return response.ProductResponse{}, &errors.AppError{Message: "upload request does not belong to seller", Code: http.StatusForbidden}
+			}
+			if uploadReq.Status != "COMPLETED" {
+				tx.Rollback()
+				return response.ProductResponse{}, &errors.AppError{Message: "image upload not completed", Code: http.StatusBadRequest}
+			}
+			_, err = qtx.CreateVariantImage(ctx, db.CreateVariantImageParams{
+				VariantID: v.ID,
+				ImageKey:  img.ImageKey,
+				Position:  img.Position,
+			})
+			if err != nil {
+				tx.Rollback()
+				return response.ProductResponse{}, &errors.AppError{Message: "failed to create variant image", Code: http.StatusInternalServerError}
+			}
+		}
+
+	}
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return response.ProductResponse{}, &errors.AppError{Message: "failed to commit transaction", Code: http.StatusInternalServerError}
 	}
 
 	return response.ProductResponse{
-		ID:          product.ID,
-		Title:       product.Title,
-		Description: product.Description,
-		Price:       product.Price,
-		ImageUrl:    product.ImageUrl,
-		IsActive:    product.IsActive,
-		Discounted:  respDiscounted,
-		SellerID:    product.SellerID,
-		CreatedAt:   product.CreatedAt,
-		CategoryID:  product.CategoryID,
+		ID: product.ID,
 	}, nil
 }
-
-func (s *ProductService) UpdateProduct(ctx context.Context, id int64, req request.UpdateProductRequest, userID int64) (response.ProductResponse, error) {
-	// TODO: Change to Put method for full update
+func (s *ProductService) UpdateProduct(ctx context.Context, productID int64, req request.UpdateProductRequest, userID int64) (response.ProductResponse, error) {
 	seller, err := s.Queries.GetSellerByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -179,8 +208,8 @@ func (s *ProductService) UpdateProduct(ctx context.Context, id int64, req reques
 		return response.ProductResponse{}, &errors.AppError{Message: "failed to verify seller", Code: http.StatusInternalServerError}
 	}
 
-	existingProduct, err := s.Queries.GetProductBySeller(ctx, db.GetProductBySellerParams{
-		ID:       id,
+	product, err := s.Queries.GetProductBySeller(ctx, db.GetProductBySellerParams{
+		ID:       productID,
 		SellerID: seller.ID,
 	})
 	if err != nil {
@@ -190,67 +219,97 @@ func (s *ProductService) UpdateProduct(ctx context.Context, id int64, req reques
 		return response.ProductResponse{}, &errors.AppError{Message: "failed to get product", Code: http.StatusInternalServerError}
 	}
 
-	var title, description, imageUrl sql.NullString
-	var price sql.NullFloat64
-	var isActive sql.NullBool
-	var discounted sql.NullInt32
-	var category sql.NullInt64
-	if req.Title != "" {
-		title = sql.NullString{String: req.Title, Valid: true}
-	}
-	if req.Description != "" {
-		description = sql.NullString{String: req.Description, Valid: true}
-	}
-	if req.Price > 0 {
-		price = sql.NullFloat64{Float64: req.Price, Valid: true}
-	}
-	if req.ImageUrl != "" {
-		imageUrl = sql.NullString{String: req.ImageUrl, Valid: true}
-	}
-	if req.CategoryID != 0 {
-		category = sql.NullInt64{Int64: req.CategoryID, Valid: true}
-	}
-	if req.IsActive != nil {
-		isActive = sql.NullBool{Bool: *req.IsActive, Valid: true}
-	}
-	if req.Discounted != nil {
-		discounted = sql.NullInt32{Int32: *req.Discounted, Valid: true}
-	}
-
-	product, err := s.Queries.UpdateProduct(ctx, db.UpdateProductParams{
-		ID:          existingProduct.ID,
-		Title:       title,
-		Description: description,
-		Price:       price,
-		ImageUrl:    imageUrl,
-		CategoryID:  category,
-		IsActive:    isActive,
-		Discounted:  discounted,
-	})
+	tx, err := s.Conn.BeginTx(ctx, nil)
 	if err != nil {
+		return response.ProductResponse{}, &errors.AppError{Message: "failed to start transaction", Code: http.StatusInternalServerError}
+	}
+	qtx := s.Queries.WithTx(tx)
+
+	productData := db.UpdateProductParams{
+		ID:          product.ID,
+		Title:       req.Title,
+		Description: req.Description,
+		CategoryID:  req.CategoryID,
+		IsActive:    req.IsActive,
+	}
+	product, err = qtx.UpdateProduct(ctx, productData)
+	if err != nil {
+		tx.Rollback()
 		return response.ProductResponse{}, &errors.AppError{Message: "failed to update product", Code: http.StatusInternalServerError}
 	}
+	for _, variant := range req.Variant {
 
-	var respDiscounted *int32
-	if product.Discounted.Valid {
-		respDiscounted = &product.Discounted.Int32
+		variantData := db.UpdateProductVariantParams{
+			ID:          product.ID,
+			Title:       variant.Title,
+			Description: variant.Description,
+			Size:        variant.Size,
+			Price:       variant.Price,
+			Discounted:  sql.NullInt32{Int32: variant.Discounted, Valid: variant.Discounted >= 0},
+			Stock:       variant.Stock,
+		}
+
+		v, err := qtx.UpdateProductVariant(ctx, variantData)
+		if err != nil {
+			tx.Rollback()
+			return response.ProductResponse{}, &errors.AppError{Message: "failed to update product variant", Code: http.StatusInternalServerError}
+		}
+		for _, attr := range variant.Attributes {
+			attrData := db.UpdateVariantAttributeParams{
+				ID:    v.ID,
+				Name:  attr.Name,
+				Value: attr.Value,
+			}
+			_, err := qtx.UpdateVariantAttribute(ctx, attrData)
+			if err != nil {
+				tx.Rollback()
+				return response.ProductResponse{}, &errors.AppError{Message: "failed to update variant attribute", Code: http.StatusInternalServerError}
+			}
+		}
+		for _, img := range variant.Images {
+			uploadReq, err := qtx.GetUploadRequestByKey(ctx, img.ImageKey)
+			if err != nil {
+				tx.Rollback()
+				return response.ProductResponse{}, &errors.AppError{Message: "failed to get upload request", Code: http.StatusInternalServerError}
+			}
+			if uploadReq.UserID != seller.ID {
+				tx.Rollback()
+				return response.ProductResponse{}, &errors.AppError{Message: "upload request does not belong to seller", Code: http.StatusForbidden}
+			}
+			if uploadReq.Status != "COMPLETED" {
+				tx.Rollback()
+				return response.ProductResponse{}, &errors.AppError{Message: "image upload not completed", Code: http.StatusBadRequest}
+			}
+			_, err = qtx.UpdateVariantImage(ctx, db.UpdateVariantImageParams{
+				ID:       v.ID,
+				ImageKey: img.ImageKey,
+				Position: img.Position,
+			})
+			if err != nil {
+				tx.Rollback()
+				return response.ProductResponse{}, &errors.AppError{Message: "failed to update variant image", Code: http.StatusInternalServerError}
+			}
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return response.ProductResponse{}, &errors.AppError{Message: "failed to commit transaction", Code: http.StatusInternalServerError}
 	}
 
 	return response.ProductResponse{
 		ID:          product.ID,
 		Title:       product.Title,
 		Description: product.Description,
-		Price:       product.Price,
-		ImageUrl:    product.ImageUrl,
 		IsActive:    product.IsActive,
-		Discounted:  respDiscounted,
 		SellerID:    product.SellerID,
 		CreatedAt:   product.CreatedAt,
 		CategoryID:  product.CategoryID,
 	}, nil
+
 }
 
-func (s *ProductService) DeleteProduct(ctx context.Context, id int64, userID int64) error {
+func (s *ProductService) DeleteProduct(ctx context.Context, productID int64, userID int64) error {
 	seller, err := s.Queries.GetSellerByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -260,7 +319,7 @@ func (s *ProductService) DeleteProduct(ctx context.Context, id int64, userID int
 	}
 
 	_, err = s.Queries.GetProductBySeller(ctx, db.GetProductBySellerParams{
-		ID:       id,
+		ID:       productID,
 		SellerID: seller.ID,
 	})
 	if err != nil {
@@ -270,7 +329,7 @@ func (s *ProductService) DeleteProduct(ctx context.Context, id int64, userID int
 		return &errors.AppError{Message: "failed to get product", Code: http.StatusInternalServerError}
 	}
 
-	err = s.Queries.DeleteProduct(ctx, id)
+	err = s.Queries.DeleteProduct(ctx, productID)
 	if err != nil {
 		return &errors.AppError{Message: "failed to delete product", Code: http.StatusInternalServerError}
 	}

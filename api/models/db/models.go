@@ -276,6 +276,49 @@ func (ns NullSellerStatus) Value() (driver.Value, error) {
 	return string(ns.SellerStatus), nil
 }
 
+type UploadStatus string
+
+const (
+	UploadStatusPENDING   UploadStatus = "PENDING"
+	UploadStatusCOMPLETED UploadStatus = "COMPLETED"
+	UploadStatusExpired   UploadStatus = "Expired"
+)
+
+func (e *UploadStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = UploadStatus(s)
+	case string:
+		*e = UploadStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for UploadStatus: %T", src)
+	}
+	return nil
+}
+
+type NullUploadStatus struct {
+	UploadStatus UploadStatus `json:"upload_status"`
+	Valid        bool         `json:"valid"` // Valid is true if UploadStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullUploadStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.UploadStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.UploadStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullUploadStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.UploadStatus), nil
+}
+
 type Account struct {
 	ID          int64          `json:"id"`
 	AccountID   string         `json:"account_id"`
@@ -364,16 +407,13 @@ type Payment struct {
 }
 
 type Product struct {
-	ID          int64         `json:"id"`
-	Title       string        `json:"title"`
-	Description string        `json:"description"`
-	Price       float64       `json:"price"`
-	ImageUrl    string        `json:"image_url"`
-	IsActive    bool          `json:"is_active"`
-	Discounted  sql.NullInt32 `json:"discounted"`
-	SellerID    int64         `json:"seller_id"`
-	CreatedAt   time.Time     `json:"created_at"`
-	CategoryID  int64         `json:"category_id"`
+	ID          int64     `json:"id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	IsActive    bool      `json:"is_active"`
+	SellerID    int64     `json:"seller_id"`
+	CreatedAt   time.Time `json:"created_at"`
+	CategoryID  int64     `json:"category_id"`
 }
 
 type ProductCategory struct {
@@ -385,13 +425,14 @@ type ProductCategory struct {
 }
 
 type ProductVariant struct {
-	ID          int64   `json:"id"`
-	Size        string  `json:"size"`
-	Description string  `json:"description"`
-	Title       string  `json:"title"`
-	Price       float64 `json:"price"`
-	Stock       int32   `json:"stock"`
-	ProductID   int64   `json:"product_id"`
+	ID          int64         `json:"id"`
+	Size        string        `json:"size"`
+	Description string        `json:"description"`
+	Discounted  sql.NullInt32 `json:"discounted"`
+	Title       string        `json:"title"`
+	Price       float64       `json:"price"`
+	Stock       int32         `json:"stock"`
+	ProductID   int64         `json:"product_id"`
 }
 
 type RefreshToken struct {
@@ -435,15 +476,16 @@ type SellerDocument struct {
 }
 
 type Upload struct {
-	ID          int64     `json:"id"`
-	Filename    string    `json:"filename"`
-	Key         string    `json:"key"`
-	ContentType string    `json:"content_type"`
-	FileSize    int64     `json:"file_size"`
-	UploadType  string    `json:"upload_type"`
-	UserID      int64     `json:"user_id"`
-	UploadedAt  time.Time `json:"uploaded_at"`
-	ExpiresAt   time.Time `json:"expires_at"`
+	ID          int64        `json:"id"`
+	Filename    string       `json:"filename"`
+	Key         string       `json:"key"`
+	ContentType string       `json:"content_type"`
+	FileSize    int64        `json:"file_size"`
+	UploadType  string       `json:"upload_type"`
+	Status      UploadStatus `json:"status"`
+	UserID      int64        `json:"user_id"`
+	UploadedAt  time.Time    `json:"uploaded_at"`
+	ExpiresAt   time.Time    `json:"expires_at"`
 }
 
 type User struct {

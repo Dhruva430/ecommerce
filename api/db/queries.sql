@@ -1,6 +1,6 @@
 -- name: CreateUser :one
-INSERT INTO "user" (email, role)
-VALUES ($1, $2) 
+INSERT INTO "user" (email, role, username)
+VALUES ($1, $2, $3) 
 RETURNING id, email, role;
 
 -- name: CreateAccount :exec
@@ -87,20 +87,62 @@ SELECT * FROM product
 WHERE id = $1;
 
 -- name: CreateProduct :one
-INSERT INTO product (title, description, price, image_url, category_id, discounted, seller_id)
+INSERT INTO product (title, description, category_id, seller_id)
+VALUES ($1, $2, $3, $4)
+RETURNING *;
+
+-- name: CreateProductVariant :one
+INSERT INTO product_variant (product_id, title, description, size, price, discounted, stock)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;
 
+-- name: CreateVariantAttribute :one
+INSERT INTO variant_attribute (variant_id, name, value)
+VALUES ($1, $2, $3)
+RETURNING *;
+
+-- name: CreateVariantImage :one
+INSERT INTO variant_images (variant_id, image_key, position)
+VALUES ($1, $2, $3)
+RETURNING *;
+
+
+-- name: GetUploadRequestByKey :one
+SELECT * FROM uploads
+WHERE key = $1;
+
 -- name: UpdateProduct :one
 UPDATE product
-SET title = COALESCE(sqlc.narg(title), title),
-    description = COALESCE(sqlc.narg(description), description),
-    price = COALESCE(sqlc.narg(price), price),
-    image_url = COALESCE(sqlc.narg(image_url), image_url),
-    category_id = COALESCE(sqlc.narg(category_id), category_id),
-    is_active = COALESCE(sqlc.narg(is_active), is_active),
-    discounted = COALESCE(sqlc.narg(discounted), discounted)
-WHERE id = sqlc.arg(id)
+SET title = $2,
+    description = $3,
+    category_id = $4,
+    is_active = $5
+WHERE id = $1
+RETURNING *;
+
+-- name: UpdateProductVariant :one
+UPDATE product_variant
+SET title = $2,
+    description = $3,
+    size = $4,
+    price = $5,
+    discounted = $6,
+    stock = $7
+WHERE id = $1
+RETURNING *;
+
+-- name: UpdateVariantAttribute :one
+UPDATE variant_attribute
+SET name = $2,
+    value = $3
+WHERE id = $1
+RETURNING *;  
+
+-- name: UpdateVariantImage :one
+UPDATE variant_images
+SET image_key = $2,
+    position = $3
+WHERE id = $1
 RETURNING *;
 
 -- name: DeleteProduct :exec
@@ -117,6 +159,6 @@ SELECT * FROM seller
 WHERE user_id = $1;
 
 -- name: CreateRequestFileUpload :one
-INSERT INTO uploads (key, filename, content_type, file_size, upload_type, expires_at)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO uploads (key, filename, content_type, file_size, upload_type, expires_at, user_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;

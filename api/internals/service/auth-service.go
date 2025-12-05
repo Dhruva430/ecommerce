@@ -8,6 +8,7 @@ import (
 	"api/util"
 	"context"
 	"database/sql"
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -38,13 +39,15 @@ func (a *AuthService) Register(ctx context.Context, req request.RegisterRequest)
 	qtx := a.Queries.WithTx(tx)
 
 	data := db.CreateUserParams{
-		Email: req.Email,
-		Role:  db.Role(req.Role),
+		Email:    req.Email,
+		Role:     db.Role(req.Role),
+		Username: req.Username,
 	}
 	user, err := qtx.CreateUser(
 		ctx, data,
 	)
 	if err != nil {
+		fmt.Print(err)
 		return &errors.AppError{Message: "failed to create user", Code: http.StatusInternalServerError}
 	}
 	account := db.CreateAccountParams{
@@ -56,6 +59,7 @@ func (a *AuthService) Register(ctx context.Context, req request.RegisterRequest)
 	if err = qtx.CreateAccount(
 		ctx, account,
 	); err != nil {
+		fmt.Print(err)
 		return &errors.AppError{Message: "failed to create account", Code: http.StatusInternalServerError}
 	}
 	if err := tx.Commit(); err != nil {
@@ -65,8 +69,9 @@ func (a *AuthService) Register(ctx context.Context, req request.RegisterRequest)
 
 }
 
-func (a *AuthService) Login(ctx context.Context, req request.LoginRequest) (response.UserResponse, error) {
+func (a *AuthService) Login(ctx context.Context, req request.LoginRequest, ip string) (response.UserResponse, error) {
 	var res response.UserResponse
+	ip = "" + ip
 	{
 		user, err := a.Queries.GetUserByAccountID(ctx, req.Email)
 		if err != nil {
@@ -80,11 +85,11 @@ func (a *AuthService) Login(ctx context.Context, req request.LoginRequest) (resp
 			return res, &errors.AppError{Message: "invalid password", Code: http.StatusUnauthorized}
 		}
 
-		refreshToken, claims, err := util.GenerateRefreshToken(int32(user.ID), req.IP)
+		refreshToken, claims, err := util.GenerateRefreshToken(user.ID, ip)
 		if err != nil {
 			return res, &errors.AppError{Message: "failed to generate refresh token", Code: http.StatusInternalServerError}
 		}
-		accessToken, _, err := util.GenerateAccessToken(int32(user.ID), req.IP, claims.Permissions)
+		accessToken, _, err := util.GenerateAccessToken(user.ID, ip, claims.Permissions)
 		if err != nil {
 			return res, &errors.AppError{Message: "failed to generate access token", Code: http.StatusInternalServerError}
 		}
@@ -93,7 +98,7 @@ func (a *AuthService) Login(ctx context.Context, req request.LoginRequest) (resp
 			ID:        claims.ID,
 			Token:     refreshToken,
 			UserID:    user.ID,
-			IpAddress: sql.NullString{String: req.IP, Valid: true},
+			IpAddress: sql.NullString{String: ip, Valid: true},
 			ExpiresAt: claims.ExpiresAt.Time,
 		})
 		res = response.UserResponse{

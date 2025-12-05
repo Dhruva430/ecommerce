@@ -21,10 +21,12 @@ func SetupRouter(queries *db.Queries, conn *sql.DB) *gin.Engine {
 	authService := service.NewAuthService(queries, conn)
 	userService := service.NewUserService(queries, conn)
 	productService := service.NewProductService(queries, conn)
+	uploadService := service.NewUploadService(queries, conn)
 
 	authController := controllers.NewAuthController(authService)
 	userController := controllers.NewUserController(userService)
 	productController := controllers.NewProductController(productService)
+	uploadController := controllers.NewUploadController(uploadService)
 
 	// -------------------- PUBLIC ROUTES -------------------- //
 	authRoutes := routerAPI.Group("/auth")
@@ -42,7 +44,7 @@ func SetupRouter(queries *db.Queries, conn *sql.DB) *gin.Engine {
 
 	// -------------------- PROTECTED ROUTES -------------------- //
 	protected := routerAPI.Group("")
-	protected.Use(middleware.AuthMiddleware()) // ⬅ access-token validation
+	protected.Use(middleware.AuthMiddleware())
 
 	{
 		protected.GET("/me", authController.Me)
@@ -58,6 +60,9 @@ func SetupRouter(queries *db.Queries, conn *sql.DB) *gin.Engine {
 		protected.POST("/products", productController.CreateProduct)
 		protected.PUT("/products/:id", productController.UpdateProduct)
 		protected.DELETE("/products/:id", productController.DeleteProduct)
+	}
+	{
+		protected.POST("/upload/request", uploadController.RequestFileUpload)
 	}
 
 	return r

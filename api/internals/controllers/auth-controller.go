@@ -23,7 +23,7 @@ func NewAuthController(service service.AuthService) *AuthController {
 func (a *AuthController) Register(c *gin.Context) {
 	var req request.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.Error(&errors.AppError{Message: "invalid request", Code: http.StatusBadRequest})
+		c.Error(err)
 		return
 	}
 
@@ -46,9 +46,8 @@ func (a *AuthController) Login(c *gin.Context) {
 	req = request.LoginRequest{
 		Email:    req.Email,
 		Password: req.Password,
-		IP:       ip,
 	}
-	user, err := a.service.Login(c, req)
+	user, err := a.service.Login(c, req, ip)
 	if err != nil {
 		c.Error(err)
 		return

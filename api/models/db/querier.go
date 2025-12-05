@@ -12,9 +12,12 @@ type Querier interface {
 	CountProducts(ctx context.Context, arg CountProductsParams) (int64, error)
 	CreateAccount(ctx context.Context, arg CreateAccountParams) error
 	CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error)
+	CreateProductVariant(ctx context.Context, arg CreateProductVariantParams) (ProductVariant, error)
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) error
 	CreateRequestFileUpload(ctx context.Context, arg CreateRequestFileUploadParams) (Upload, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
+	CreateVariantAttribute(ctx context.Context, arg CreateVariantAttributeParams) (VariantAttribute, error)
+	CreateVariantImage(ctx context.Context, arg CreateVariantImageParams) (VariantImage, error)
 	DeleteProduct(ctx context.Context, id int64) error
 	DeleteRefreshTokensByID(ctx context.Context, id string) error
 	DeleteUser(ctx context.Context, id int64) error
@@ -25,12 +28,16 @@ type Querier interface {
 	GetProductBySeller(ctx context.Context, arg GetProductBySellerParams) (Product, error)
 	GetRefreshToken(ctx context.Context, id string) (GetRefreshTokenRow, error)
 	GetSellerByUserID(ctx context.Context, userID int64) (Seller, error)
+	GetUploadRequestByKey(ctx context.Context, key string) (Upload, error)
 	GetUserAddresses(ctx context.Context, userID int64) ([]Address, error)
 	GetUserByAccountID(ctx context.Context, accountID string) (GetUserByAccountIDRow, error)
 	GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, error)
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error)
+	UpdateProductVariant(ctx context.Context, arg UpdateProductVariantParams) (ProductVariant, error)
 	UpdateRefreshTokenRevoked(ctx context.Context, arg UpdateRefreshTokenRevokedParams) error
 	UpdateUserAddress(ctx context.Context, arg UpdateUserAddressParams) error
+	UpdateVariantAttribute(ctx context.Context, arg UpdateVariantAttributeParams) (VariantAttribute, error)
+	UpdateVariantImage(ctx context.Context, arg UpdateVariantImageParams) (VariantImage, error)
 }
 
 var _ Querier = (*Queries)(nil)

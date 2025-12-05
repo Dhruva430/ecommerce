@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"fmt"
 	"net/http"
 
 	"api/util"
@@ -12,6 +13,7 @@ import (
 func GlobalErrorHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
+		fmt.Println("Handling Error Length", len(c.Errors))
 		if len(c.Errors) > 0 {
 			err := c.Errors[0].Err
 			if appErr, ok := err.(*AppError); ok {

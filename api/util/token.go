@@ -12,13 +12,13 @@ import (
 )
 
 type JWTClaims struct {
-	UserID      int32   `json:"user_id"`
+	UserID      int64   `json:"user_id"`
 	Type        string  `json:"type"`
 	Permissions []int32 `json:"perms,omitempty"`
 	jwt.RegisteredClaims
 }
 
-func GenerateAccessToken(subject int32, audience string, perms []int32) (string, time.Time, error) {
+func GenerateAccessToken(subject int64, audience string, perms []int32) (string, time.Time, error) {
 	expirationTime := time.Now().Add(15 * time.Minute)
 
 	claims := JWTClaims{
@@ -40,7 +40,7 @@ func GenerateAccessToken(subject int32, audience string, perms []int32) (string,
 	return tokenString, expirationTime, nil
 }
 
-func GenerateRefreshToken(subject int32, audience string) (string, *JWTClaims, error) {
+func GenerateRefreshToken(subject int64, audience string) (string, *JWTClaims, error) {
 	expiration := time.Now().Add(7 * 24 * time.Hour)
 	claims := JWTClaims{
 		UserID: subject,

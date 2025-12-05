@@ -54,29 +54,23 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) er
 }
 
 const createProduct = `-- name: CreateProduct :one
-INSERT INTO product (title, description, price, image_url, category_id, discounted, seller_id)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, title, description, price, image_url, is_active, discounted, seller_id, created_at, category_id
+INSERT INTO product (title, description, category_id, seller_id)
+VALUES ($1, $2, $3, $4)
+RETURNING id, title, description, is_active, seller_id, created_at, category_id
 `
 
 type CreateProductParams struct {
-	Title       string        `json:"title"`
-	Description string        `json:"description"`
-	Price       float64       `json:"price"`
-	ImageUrl    string        `json:"image_url"`
-	CategoryID  int64         `json:"category_id"`
-	Discounted  sql.NullInt32 `json:"discounted"`
-	SellerID    int64         `json:"seller_id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	CategoryID  int64  `json:"category_id"`
+	SellerID    int64  `json:"seller_id"`
 }
 
 func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error) {
 	row := q.db.QueryRowContext(ctx, createProduct,
 		arg.Title,
 		arg.Description,
-		arg.Price,
-		arg.ImageUrl,
 		arg.CategoryID,
-		arg.Discounted,
 		arg.SellerID,
 	)
 	var i Product
@@ -84,13 +78,50 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (P
 		&i.ID,
 		&i.Title,
 		&i.Description,
-		&i.Price,
-		&i.ImageUrl,
 		&i.IsActive,
-		&i.Discounted,
 		&i.SellerID,
 		&i.CreatedAt,
 		&i.CategoryID,
+	)
+	return i, err
+}
+
+const createProductVariant = `-- name: CreateProductVariant :one
+INSERT INTO product_variant (product_id, title, description, size, price, discounted, stock)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, size, description, discounted, title, price, stock, product_id
+`
+
+type CreateProductVariantParams struct {
+	ProductID   int64         `json:"product_id"`
+	Title       string        `json:"title"`
+	Description string        `json:"description"`
+	Size        string        `json:"size"`
+	Price       float64       `json:"price"`
+	Discounted  sql.NullInt32 `json:"discounted"`
+	Stock       int32         `json:"stock"`
+}
+
+func (q *Queries) CreateProductVariant(ctx context.Context, arg CreateProductVariantParams) (ProductVariant, error) {
+	row := q.db.QueryRowContext(ctx, createProductVariant,
+		arg.ProductID,
+		arg.Title,
+		arg.Description,
+		arg.Size,
+		arg.Price,
+		arg.Discounted,
+		arg.Stock,
+	)
+	var i ProductVariant
+	err := row.Scan(
+		&i.ID,
+		&i.Size,
+		&i.Description,
+		&i.Discounted,
+		&i.Title,
+		&i.Price,
+		&i.Stock,
+		&i.ProductID,
 	)
 	return i, err
 }
@@ -120,9 +151,9 @@ func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshToken
 }
 
 const createRequestFileUpload = `-- name: CreateRequestFileUpload :one
-INSERT INTO uploads (key, filename, content_type, file_size, upload_type, expires_at)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, filename, key, content_type, file_size, upload_type, user_id, uploaded_at, expires_at
+INSERT INTO uploads (key, filename, content_type, file_size, upload_type, expires_at, user_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, filename, key, content_type, file_size, upload_type, status, user_id, uploaded_at, expires_at
 `
 
 type CreateRequestFileUploadParams struct {
@@ -132,6 +163,7 @@ type CreateRequestFileUploadParams struct {
 	FileSize    int64     `json:"file_size"`
 	UploadType  string    `json:"upload_type"`
 	ExpiresAt   time.Time `json:"expires_at"`
+	UserID      int64     `json:"user_id"`
 }
 
 func (q *Queries) CreateRequestFileUpload(ctx context.Context, arg CreateRequestFileUploadParams) (Upload, error) {
@@ -142,6 +174,7 @@ func (q *Queries) CreateRequestFileUpload(ctx context.Context, arg CreateRequest
 		arg.FileSize,
 		arg.UploadType,
 		arg.ExpiresAt,
+		arg.UserID,
 	)
 	var i Upload
 	err := row.Scan(
@@ -151,6 +184,7 @@ func (q *Queries) CreateRequestFileUpload(ctx context.Context, arg CreateRequest
 		&i.ContentType,
 		&i.FileSize,
 		&i.UploadType,
+		&i.Status,
 		&i.UserID,
 		&i.UploadedAt,
 		&i.ExpiresAt,
@@ -159,14 +193,15 @@ func (q *Queries) CreateRequestFileUpload(ctx context.Context, arg CreateRequest
 }
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO "user" (email, role)
-VALUES ($1, $2) 
+INSERT INTO "user" (email, role, username)
+VALUES ($1, $2, $3) 
 RETURNING id, email, role
 `
 
 type CreateUserParams struct {
-	Email string `json:"email"`
-	Role  Role   `json:"role"`
+	Email    string `json:"email"`
+	Role     Role   `json:"role"`
+	Username string `json:"username"`
 }
 
 type CreateUserRow struct {
@@ -176,9 +211,57 @@ type CreateUserRow struct {
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
-	row := q.db.QueryRowContext(ctx, createUser, arg.Email, arg.Role)
+	row := q.db.QueryRowContext(ctx, createUser, arg.Email, arg.Role, arg.Username)
 	var i CreateUserRow
 	err := row.Scan(&i.ID, &i.Email, &i.Role)
+	return i, err
+}
+
+const createVariantAttribute = `-- name: CreateVariantAttribute :one
+INSERT INTO variant_attribute (variant_id, name, value)
+VALUES ($1, $2, $3)
+RETURNING id, name, value, variant_id
+`
+
+type CreateVariantAttributeParams struct {
+	VariantID int64  `json:"variant_id"`
+	Name      string `json:"name"`
+	Value     string `json:"value"`
+}
+
+func (q *Queries) CreateVariantAttribute(ctx context.Context, arg CreateVariantAttributeParams) (VariantAttribute, error) {
+	row := q.db.QueryRowContext(ctx, createVariantAttribute, arg.VariantID, arg.Name, arg.Value)
+	var i VariantAttribute
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Value,
+		&i.VariantID,
+	)
+	return i, err
+}
+
+const createVariantImage = `-- name: CreateVariantImage :one
+INSERT INTO variant_images (variant_id, image_key, position)
+VALUES ($1, $2, $3)
+RETURNING id, image_key, position, variant_id
+`
+
+type CreateVariantImageParams struct {
+	VariantID int64  `json:"variant_id"`
+	ImageKey  string `json:"image_key"`
+	Position  int32  `json:"position"`
+}
+
+func (q *Queries) CreateVariantImage(ctx context.Context, arg CreateVariantImageParams) (VariantImage, error) {
+	row := q.db.QueryRowContext(ctx, createVariantImage, arg.VariantID, arg.ImageKey, arg.Position)
+	var i VariantImage
+	err := row.Scan(
+		&i.ID,
+		&i.ImageKey,
+		&i.Position,
+		&i.VariantID,
+	)
 	return i, err
 }
 
@@ -216,7 +299,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 
 const getAllProducts = `-- name: GetAllProducts :many
 
-SELECT id, title, description, price, image_url, is_active, discounted, seller_id, created_at, category_id FROM product
+SELECT id, title, description, is_active, seller_id, created_at, category_id FROM product
 WHERE ($1::text IS NULL OR category_id = $1)
   AND ($2::bigint IS NULL OR seller_id = $2)
   AND ($3::boolean IS NULL OR is_active = $3)
@@ -252,10 +335,7 @@ func (q *Queries) GetAllProducts(ctx context.Context, arg GetAllProductsParams) 
 			&i.ID,
 			&i.Title,
 			&i.Description,
-			&i.Price,
-			&i.ImageUrl,
 			&i.IsActive,
-			&i.Discounted,
 			&i.SellerID,
 			&i.CreatedAt,
 			&i.CategoryID,
@@ -313,7 +393,7 @@ func (q *Queries) GetOrderHistory(ctx context.Context, userID int64) ([]Order, e
 }
 
 const getProductByID = `-- name: GetProductByID :one
-SELECT id, title, description, price, image_url, is_active, discounted, seller_id, created_at, category_id FROM product
+SELECT id, title, description, is_active, seller_id, created_at, category_id FROM product
 WHERE id = $1
 `
 
@@ -324,10 +404,7 @@ func (q *Queries) GetProductByID(ctx context.Context, id int64) (Product, error)
 		&i.ID,
 		&i.Title,
 		&i.Description,
-		&i.Price,
-		&i.ImageUrl,
 		&i.IsActive,
-		&i.Discounted,
 		&i.SellerID,
 		&i.CreatedAt,
 		&i.CategoryID,
@@ -336,7 +413,7 @@ func (q *Queries) GetProductByID(ctx context.Context, id int64) (Product, error)
 }
 
 const getProductBySeller = `-- name: GetProductBySeller :one
-SELECT id, title, description, price, image_url, is_active, discounted, seller_id, created_at, category_id FROM product
+SELECT id, title, description, is_active, seller_id, created_at, category_id FROM product
 WHERE id = $1 AND seller_id = $2
 `
 
@@ -352,10 +429,7 @@ func (q *Queries) GetProductBySeller(ctx context.Context, arg GetProductBySeller
 		&i.ID,
 		&i.Title,
 		&i.Description,
-		&i.Price,
-		&i.ImageUrl,
 		&i.IsActive,
-		&i.Discounted,
 		&i.SellerID,
 		&i.CreatedAt,
 		&i.CategoryID,
@@ -412,6 +486,29 @@ func (q *Queries) GetSellerByUserID(ctx context.Context, userID int64) (Seller, 
 		&i.Status,
 		&i.CreatedAt,
 		&i.Verified,
+	)
+	return i, err
+}
+
+const getUploadRequestByKey = `-- name: GetUploadRequestByKey :one
+SELECT id, filename, key, content_type, file_size, upload_type, status, user_id, uploaded_at, expires_at FROM uploads
+WHERE key = $1
+`
+
+func (q *Queries) GetUploadRequestByKey(ctx context.Context, key string) (Upload, error) {
+	row := q.db.QueryRowContext(ctx, getUploadRequestByKey, key)
+	var i Upload
+	err := row.Scan(
+		&i.ID,
+		&i.Filename,
+		&i.Key,
+		&i.ContentType,
+		&i.FileSize,
+		&i.UploadType,
+		&i.Status,
+		&i.UserID,
+		&i.UploadedAt,
+		&i.ExpiresAt,
 	)
 	return i, err
 }
@@ -514,51 +611,85 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, er
 
 const updateProduct = `-- name: UpdateProduct :one
 UPDATE product
-SET title = COALESCE($1, title),
-    description = COALESCE($2, description),
-    price = COALESCE($3, price),
-    image_url = COALESCE($4, image_url),
-    category_id = COALESCE($5, category_id),
-    is_active = COALESCE($6, is_active),
-    discounted = COALESCE($7, discounted)
-WHERE id = $8
-RETURNING id, title, description, price, image_url, is_active, discounted, seller_id, created_at, category_id
+SET title = $2,
+    description = $3,
+    category_id = $4,
+    is_active = $5
+WHERE id = $1
+RETURNING id, title, description, is_active, seller_id, created_at, category_id
 `
 
 type UpdateProductParams struct {
-	Title       sql.NullString  `json:"title"`
-	Description sql.NullString  `json:"description"`
-	Price       sql.NullFloat64 `json:"price"`
-	ImageUrl    sql.NullString  `json:"image_url"`
-	CategoryID  sql.NullInt64   `json:"category_id"`
-	IsActive    sql.NullBool    `json:"is_active"`
-	Discounted  sql.NullInt32   `json:"discounted"`
-	ID          int64           `json:"id"`
+	ID          int64  `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	CategoryID  int64  `json:"category_id"`
+	IsActive    bool   `json:"is_active"`
 }
 
 func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error) {
 	row := q.db.QueryRowContext(ctx, updateProduct,
+		arg.ID,
 		arg.Title,
 		arg.Description,
-		arg.Price,
-		arg.ImageUrl,
 		arg.CategoryID,
 		arg.IsActive,
-		arg.Discounted,
-		arg.ID,
 	)
 	var i Product
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
 		&i.Description,
-		&i.Price,
-		&i.ImageUrl,
 		&i.IsActive,
-		&i.Discounted,
 		&i.SellerID,
 		&i.CreatedAt,
 		&i.CategoryID,
+	)
+	return i, err
+}
+
+const updateProductVariant = `-- name: UpdateProductVariant :one
+UPDATE product_variant
+SET title = $2,
+    description = $3,
+    size = $4,
+    price = $5,
+    discounted = $6,
+    stock = $7
+WHERE id = $1
+RETURNING id, size, description, discounted, title, price, stock, product_id
+`
+
+type UpdateProductVariantParams struct {
+	ID          int64         `json:"id"`
+	Title       string        `json:"title"`
+	Description string        `json:"description"`
+	Size        string        `json:"size"`
+	Price       float64       `json:"price"`
+	Discounted  sql.NullInt32 `json:"discounted"`
+	Stock       int32         `json:"stock"`
+}
+
+func (q *Queries) UpdateProductVariant(ctx context.Context, arg UpdateProductVariantParams) (ProductVariant, error) {
+	row := q.db.QueryRowContext(ctx, updateProductVariant,
+		arg.ID,
+		arg.Title,
+		arg.Description,
+		arg.Size,
+		arg.Price,
+		arg.Discounted,
+		arg.Stock,
+	)
+	var i ProductVariant
+	err := row.Scan(
+		&i.ID,
+		&i.Size,
+		&i.Description,
+		&i.Discounted,
+		&i.Title,
+		&i.Price,
+		&i.Stock,
+		&i.ProductID,
 	)
 	return i, err
 }
@@ -615,4 +746,56 @@ func (q *Queries) UpdateUserAddress(ctx context.Context, arg UpdateUserAddressPa
 		arg.PhoneNumber,
 	)
 	return err
+}
+
+const updateVariantAttribute = `-- name: UpdateVariantAttribute :one
+UPDATE variant_attribute
+SET name = $2,
+    value = $3
+WHERE id = $1
+RETURNING id, name, value, variant_id
+`
+
+type UpdateVariantAttributeParams struct {
+	ID    int64  `json:"id"`
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func (q *Queries) UpdateVariantAttribute(ctx context.Context, arg UpdateVariantAttributeParams) (VariantAttribute, error) {
+	row := q.db.QueryRowContext(ctx, updateVariantAttribute, arg.ID, arg.Name, arg.Value)
+	var i VariantAttribute
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Value,
+		&i.VariantID,
+	)
+	return i, err
+}
+
+const updateVariantImage = `-- name: UpdateVariantImage :one
+UPDATE variant_images
+SET image_key = $2,
+    position = $3
+WHERE id = $1
+RETURNING id, image_key, position, variant_id
+`
+
+type UpdateVariantImageParams struct {
+	ID       int64  `json:"id"`
+	ImageKey string `json:"image_key"`
+	Position int32  `json:"position"`
+}
+
+func (q *Queries) UpdateVariantImage(ctx context.Context, arg UpdateVariantImageParams) (VariantImage, error) {
+	row := q.db.QueryRowContext(ctx, updateVariantImage, arg.ID, arg.ImageKey, arg.Position)
+	var i VariantImage
+	err := row.Scan(
+		&i.ID,
+		&i.ImageKey,
+		&i.Position,
+		&i.VariantID,
+	)
+	return i, err
 }

@@ -3,6 +3,7 @@ package controllers
 import (
 	"api/errors"
 	"api/internals/data/request"
+	"api/internals/middleware"
 	"api/internals/service"
 	"net/http"
 	"strconv"
@@ -49,7 +50,7 @@ func (p *ProductController) GetAllProducts(c *gin.Context) {
 }
 
 func (p *ProductController) GetProductByID(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("product_id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
 		c.Error(&errors.AppError{Message: "invalid product id", Code: http.StatusBadRequest})
@@ -91,8 +92,8 @@ func (p *ProductController) CreateProduct(c *gin.Context) {
 }
 
 func (p *ProductController) UpdateProduct(c *gin.Context) {
-	idParam := c.Param("id")
-	id, err := strconv.ParseInt(idParam, 10, 64)
+	idParam := c.Param("product_id")
+	productID, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
 		c.Error(&errors.AppError{Message: "invalid product id", Code: http.StatusBadRequest})
 		return
@@ -104,13 +105,13 @@ func (p *ProductController) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
+	userID, exists := middleware.GetUserID(c)
 	if !exists {
 		c.Error(&errors.AppError{Message: "user not found in context", Code: http.StatusUnauthorized})
 		return
 	}
 
-	product, err := p.service.UpdateProduct(c, id, req, userID.(int64))
+	product, err := p.service.UpdateProduct(c, productID, req, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -123,7 +124,7 @@ func (p *ProductController) UpdateProduct(c *gin.Context) {
 }
 
 func (p *ProductController) DeleteProduct(c *gin.Context) {
-	idParam := c.Param("id")
+	idParam := c.Param("product_id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
 		c.Error(&errors.AppError{Message: "invalid product id", Code: http.StatusBadRequest})

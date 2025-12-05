@@ -4,6 +4,8 @@ import (
 	"api/internals/data/request"
 	"api/internals/middleware"
 	"api/internals/service"
+	"fmt"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,8 +21,10 @@ func NewUploadController(service service.UploadService) *UploadController {
 }
 
 func (u *UploadController) RequestFileUpload(c *gin.Context) {
+	fmt.Print("RequestFileUpload called")
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
+		fmt.Println("Failed to get user ID from context")
 		return
 	}
 	var req request.RequestFileUploadRequest
@@ -29,19 +33,12 @@ func (u *UploadController) RequestFileUpload(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	_, err := u.service.RequestFileUpload(c, userID, req)
+	presignedData, err := u.service.RequestFileUpload(c, userID, req)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Failed to request file upload"})
+		c.Error(err)
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "File upload requested successfully"})
+	c.JSON(http.StatusOK, presignedData)
 
-}
-
-func (u *UploadController) DeleteFile() {
-	// Implementation for file deletion
-}
-func (u *UploadController) ListFiles() {
-	// Implementation for listing files
 }
