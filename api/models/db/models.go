@@ -456,15 +456,27 @@ type Review struct {
 }
 
 type Seller struct {
-	ID          int64          `json:"id"`
-	UserID      int64          `json:"user_id"`
-	ShopName    sql.NullString `json:"shop_name"`
-	ShopLogo    sql.NullString `json:"shop_logo"`
-	Description sql.NullString `json:"description"`
-	GstNumber   sql.NullString `json:"gst_number"`
-	Status      SellerStatus   `json:"status"`
-	CreatedAt   time.Time      `json:"created_at"`
-	Verified    bool           `json:"verified"`
+	ID        int64        `json:"id"`
+	UserID    int64        `json:"user_id"`
+	Status    SellerStatus `json:"status"`
+	CreatedAt time.Time    `json:"created_at"`
+	Verified  bool         `json:"verified"`
+}
+
+type SellerCredential struct {
+	ID                int64          `json:"id"`
+	SellerID          int64          `json:"seller_id"`
+	BusinessName      string         `json:"business_name"`
+	GstNumber         sql.NullString `json:"gst_number"`
+	PanNumber         sql.NullString `json:"pan_number"`
+	BankAccountNumber sql.NullString `json:"bank_account_number"`
+	IfscCode          sql.NullString `json:"ifsc_code"`
+	BusinessAddress   sql.NullString `json:"business_address"`
+	Website           sql.NullString `json:"website"`
+	ContactNumber     sql.NullInt64  `json:"contact_number"`
+	ContactPerson     sql.NullString `json:"contact_person"`
+	CreatedAt         time.Time      `json:"created_at"`
+	UpdatedAt         time.Time      `json:"updated_at"`
 }
 
 type SellerDocument struct {

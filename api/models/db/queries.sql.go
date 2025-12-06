@@ -192,6 +192,35 @@ func (q *Queries) CreateRequestFileUpload(ctx context.Context, arg CreateRequest
 	return i, err
 }
 
+const createSellerDocument = `-- name: CreateSellerDocument :one
+INSERT INTO seller_documents (
+  document,
+  document_url,
+  seller_id
+)
+VALUES ($1, $2, $3)
+RETURNING id, document, document_url, seller_id, uploaded_at
+`
+
+type CreateSellerDocumentParams struct {
+	Document    DocumentType `json:"document"`
+	DocumentUrl string       `json:"document_url"`
+	SellerID    int64        `json:"seller_id"`
+}
+
+func (q *Queries) CreateSellerDocument(ctx context.Context, arg CreateSellerDocumentParams) (SellerDocument, error) {
+	row := q.db.QueryRowContext(ctx, createSellerDocument, arg.Document, arg.DocumentUrl, arg.SellerID)
+	var i SellerDocument
+	err := row.Scan(
+		&i.ID,
+		&i.Document,
+		&i.DocumentUrl,
+		&i.SellerID,
+		&i.UploadedAt,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO "user" (email, role, username)
 VALUES ($1, $2, $3) 
@@ -469,7 +498,7 @@ func (q *Queries) GetRefreshToken(ctx context.Context, id string) (GetRefreshTok
 }
 
 const getSellerByUserID = `-- name: GetSellerByUserID :one
-SELECT id, user_id, shop_name, shop_logo, description, gst_number, status, created_at, verified FROM seller
+SELECT id, user_id, status, created_at, verified FROM seller
 WHERE user_id = $1
 `
 
@@ -479,10 +508,6 @@ func (q *Queries) GetSellerByUserID(ctx context.Context, userID int64) (Seller, 
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.ShopName,
-		&i.ShopLogo,
-		&i.Description,
-		&i.GstNumber,
 		&i.Status,
 		&i.CreatedAt,
 		&i.Verified,
@@ -580,6 +605,29 @@ func (q *Queries) GetUserByAccountID(ctx context.Context, accountID string) (Get
 		&i.Provider,
 		&i.Password,
 		&i.Username,
+	)
+	return i, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, email, username, created_at, role, address_id, verified, is_deleted, is_banned
+FROM "user_view"
+WHERE email = $1
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (UserView, error) {
+	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	var i UserView
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.CreatedAt,
+		&i.Role,
+		&i.AddressID,
+		&i.Verified,
+		&i.IsDeleted,
+		&i.IsBanned,
 	)
 	return i, err
 }
@@ -796,6 +844,81 @@ func (q *Queries) UpdateVariantImage(ctx context.Context, arg UpdateVariantImage
 		&i.ImageKey,
 		&i.Position,
 		&i.VariantID,
+	)
+	return i, err
+}
+
+const upsertSellerCredentials = `-- name: UpsertSellerCredentials :one
+INSERT INTO seller_credentials (
+  seller_id,
+  business_name,
+  gst_number,
+  pan_number,
+  bank_account_number,
+  ifsc_code,
+  business_address,
+  website,
+  contact_number,
+  contact_person
+)
+VALUES (
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+)
+ON CONFLICT (seller_id) DO UPDATE SET
+  business_name = EXCLUDED.business_name,
+  gst_number = EXCLUDED.gst_number,
+  pan_number = EXCLUDED.pan_number,
+  bank_account_number = EXCLUDED.bank_account_number,
+  ifsc_code = EXCLUDED.ifsc_code,
+  business_address = EXCLUDED.business_address,
+  website = EXCLUDED.website,
+  contact_number = EXCLUDED.contact_number,
+  contact_person = EXCLUDED.contact_person,
+  updated_at = NOW()
+RETURNING id, seller_id, business_name, gst_number, pan_number, bank_account_number, ifsc_code, business_address, website, contact_number, contact_person, created_at, updated_at
+`
+
+type UpsertSellerCredentialsParams struct {
+	SellerID          int64          `json:"seller_id"`
+	BusinessName      string         `json:"business_name"`
+	GstNumber         sql.NullString `json:"gst_number"`
+	PanNumber         sql.NullString `json:"pan_number"`
+	BankAccountNumber sql.NullString `json:"bank_account_number"`
+	IfscCode          sql.NullString `json:"ifsc_code"`
+	BusinessAddress   sql.NullString `json:"business_address"`
+	Website           sql.NullString `json:"website"`
+	ContactNumber     sql.NullInt64  `json:"contact_number"`
+	ContactPerson     sql.NullString `json:"contact_person"`
+}
+
+func (q *Queries) UpsertSellerCredentials(ctx context.Context, arg UpsertSellerCredentialsParams) (SellerCredential, error) {
+	row := q.db.QueryRowContext(ctx, upsertSellerCredentials,
+		arg.SellerID,
+		arg.BusinessName,
+		arg.GstNumber,
+		arg.PanNumber,
+		arg.BankAccountNumber,
+		arg.IfscCode,
+		arg.BusinessAddress,
+		arg.Website,
+		arg.ContactNumber,
+		arg.ContactPerson,
+	)
+	var i SellerCredential
+	err := row.Scan(
+		&i.ID,
+		&i.SellerID,
+		&i.BusinessName,
+		&i.GstNumber,
+		&i.PanNumber,
+		&i.BankAccountNumber,
+		&i.IfscCode,
+		&i.BusinessAddress,
+		&i.Website,
+		&i.ContactNumber,
+		&i.ContactPerson,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

@@ -27,7 +27,7 @@ func (a *AuthController) Register(c *gin.Context) {
 		return
 	}
 
-	err := a.service.Register(c, req)
+	err := a.service.BuyerRegister(c, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -47,7 +47,7 @@ func (a *AuthController) Login(c *gin.Context) {
 		Email:    req.Email,
 		Password: req.Password,
 	}
-	user, err := a.service.Login(c, req, ip)
+	user, err := a.service.BuyerLogin(c, req, ip)
 	if err != nil {
 		c.Error(err)
 		return

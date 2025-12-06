@@ -15,6 +15,7 @@ type Querier interface {
 	CreateProductVariant(ctx context.Context, arg CreateProductVariantParams) (ProductVariant, error)
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) error
 	CreateRequestFileUpload(ctx context.Context, arg CreateRequestFileUploadParams) (Upload, error)
+	CreateSellerDocument(ctx context.Context, arg CreateSellerDocumentParams) (SellerDocument, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	CreateVariantAttribute(ctx context.Context, arg CreateVariantAttributeParams) (VariantAttribute, error)
 	CreateVariantImage(ctx context.Context, arg CreateVariantImageParams) (VariantImage, error)
@@ -31,6 +32,7 @@ type Querier interface {
 	GetUploadRequestByKey(ctx context.Context, key string) (Upload, error)
 	GetUserAddresses(ctx context.Context, userID int64) ([]Address, error)
 	GetUserByAccountID(ctx context.Context, accountID string) (GetUserByAccountIDRow, error)
+	GetUserByEmail(ctx context.Context, email string) (UserView, error)
 	GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, error)
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error)
 	UpdateProductVariant(ctx context.Context, arg UpdateProductVariantParams) (ProductVariant, error)
@@ -38,6 +40,7 @@ type Querier interface {
 	UpdateUserAddress(ctx context.Context, arg UpdateUserAddressParams) error
 	UpdateVariantAttribute(ctx context.Context, arg UpdateVariantAttributeParams) (VariantAttribute, error)
 	UpdateVariantImage(ctx context.Context, arg UpdateVariantImageParams) (VariantImage, error)
+	UpsertSellerCredentials(ctx context.Context, arg UpsertSellerCredentialsParams) (SellerCredential, error)
 }
 
 var _ Querier = (*Queries)(nil)

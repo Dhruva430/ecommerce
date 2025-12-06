@@ -24,7 +24,7 @@ func NewAuthService(queries *db.Queries, conn *sql.DB) AuthService {
 		Conn:    conn,
 	}
 }
-func (a *AuthService) Register(ctx context.Context, req request.RegisterRequest) error {
+func (a *AuthService) BuyerRegister(ctx context.Context, req request.RegisterRequest) error {
 
 	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
@@ -34,13 +34,21 @@ func (a *AuthService) Register(ctx context.Context, req request.RegisterRequest)
 	if err != nil {
 		return &errors.AppError{Message: "failed to start transaction", Code: http.StatusInternalServerError}
 	}
+	savedUser, err := a.Queries.GetUserByEmail(ctx, req.Email)
+	if err == nil && savedUser.ID != 0 {
+		return &errors.AppError{Message: "Email already in used", Code: http.StatusConflict}
+	}
+	if savedUser.Role != db.RoleBUYER {
+		return &errors.AppError{Message: "Email already in used", Code: http.StatusConflict}
+	}
+
 	defer tx.Rollback()
 
 	qtx := a.Queries.WithTx(tx)
 
 	data := db.CreateUserParams{
 		Email:    req.Email,
-		Role:     db.Role(req.Role),
+		Role:     db.RoleBUYER,
 		Username: req.Username,
 	}
 	user, err := qtx.CreateUser(
@@ -66,10 +74,9 @@ func (a *AuthService) Register(ctx context.Context, req request.RegisterRequest)
 		return &errors.AppError{Message: "failed to commit transaction", Code: http.StatusInternalServerError}
 	}
 	return nil
-
 }
 
-func (a *AuthService) Login(ctx context.Context, req request.LoginRequest, ip string) (response.UserResponse, error) {
+func (a *AuthService) BuyerLogin(ctx context.Context, req request.LoginRequest, ip string) (response.UserResponse, error) {
 	var res response.UserResponse
 	ip = "" + ip
 	{
@@ -105,7 +112,7 @@ func (a *AuthService) Login(ctx context.Context, req request.LoginRequest, ip st
 			ID:             user.ID,
 			Email:          user.Email,
 			Username:       user.Username,
-			Role:           string(user.Role),
+			Role:           db.RoleBUYER,
 			RefreshToken:   refreshToken,
 			AccessToken:    accessToken,
 			TokenExpiresAt: claims.ExpiresAt.Time,
