@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS admin;
+
+DROP TABLE IF EXISTS seller_credentials;
+
+DROP TABLE IF EXISTS seller;
+
+DROP TABLE IF EXISTS buyer;

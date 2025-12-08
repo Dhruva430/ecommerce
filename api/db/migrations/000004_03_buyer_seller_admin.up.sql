@@ -1,0 +1,26 @@
+CREATE TABLE
+  buyer (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE REFERENCES "user" (id) ON DELETE CASCADE,
+    loyalty_points INT NOT NULL DEFAULT 0,
+    total_orders INT NOT NULL DEFAULT 0,
+    wishlist JSONB,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW ()
+  );
+
+CREATE TABLE
+  seller (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE REFERENCES "user" (id) ON DELETE CASCADE,
+    status seller_status NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMP NOT NULL DEFAULT NOW (),
+    verified BOOLEAN NOT NULL DEFAULT FALSE
+  );
+
+CREATE TABLE
+  admin (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE REFERENCES "user" (id) ON DELETE CASCADE,
+    verified BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW ()
+  );

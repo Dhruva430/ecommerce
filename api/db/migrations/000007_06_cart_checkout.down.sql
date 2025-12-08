@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS checkout_info;
+
+DROP TABLE IF EXISTS reviews;
+
+DROP TABLE IF EXISTS cart;

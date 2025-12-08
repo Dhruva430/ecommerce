@@ -1,0 +1,4 @@
+ALTER TABLE "user"
+DROP CONSTRAINT IF EXISTS fk_user_address;
+
+DROP TABLE IF EXISTS address;
