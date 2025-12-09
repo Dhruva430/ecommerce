@@ -23,14 +23,18 @@ func NewSellerService(queries *db.Queries, conn *sql.DB) SellerService {
 	}
 }
 
-func (s *SellerService) SubmitKYC(ctx context.Context, userID int64, req request.SellerKYC) error {
+func (s *SellerService) ApplyForKYC(ctx context.Context, userID int64, req request.SellerKYC) error {
 	seller, err := s.Queries.GetSellerByUserID(ctx, userID)
 	if err != nil {
 		return errors.AppError{Message: "failed to get seller info", Code: 500}
 	}
-	if !seller.Verified {
-		return errors.AppError{Message: "seller KYC not verified", Code: 403}
+	if seller.ID == 0 {
+		return errors.AppError{Message: "seller not found", Code: 404}
 	}
+	if seller.Verified {
+		return errors.AppError{Message: "seller already verified", Code: 400}
+	}
+
 	data := db.UpsertSellerCredentialsParams{
 		SellerID:          seller.ID,
 		BusinessName:      req.BusinessName,
@@ -162,7 +166,13 @@ func (s *SellerService) CreateProduct(ctx context.Context, req request.CreatePro
 	}
 
 	return response.ProductResponse{
-		ID: product.ID,
+		ID:          product.ID,
+		Title:       product.Title,
+		Description: product.Description,
+		IsActive:    product.IsActive,
+		SellerID:    product.SellerID,
+		CreatedAt:   product.CreatedAt,
+		CategoryID:  product.CategoryID,
 	}, nil
 }
 func (s *SellerService) UpdateProduct(ctx context.Context, productID int64, req request.UpdateProductRequest, userID int64) (response.ProductResponse, error) {
@@ -353,3 +363,5 @@ func (s *SellerService) RegisterSeller(ctx context.Context, req request.Register
 	return nil
 
 }
+
+// TODO: Add analytics methods for seller service

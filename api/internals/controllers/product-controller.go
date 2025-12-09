@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"api/errors"
+	"api/internals/data/request"
+	"api/internals/middleware"
 	"api/internals/service"
 	"net/http"
 	"strconv"
@@ -62,4 +64,32 @@ func (p *ProductController) GetProductByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, product)
+}
+
+func (p *ProductController) AddProductVariant(c *gin.Context) {
+	idParam := c.Param("product_id")
+	userID, exists := middleware.GetUserID(c)
+	if !exists {
+		c.Error(&errors.AppError{Message: "unauthorized", Code: http.StatusUnauthorized})
+		return
+	}
+
+	productID, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		c.Error(&errors.AppError{Message: "invalid product id", Code: http.StatusBadRequest})
+		return
+	}
+
+	var variantRequest []request.ProductVariantRequest
+	if err := c.ShouldBindJSON(&variantRequest); err != nil {
+		c.Error(&errors.AppError{Message: "invalid request body", Code: http.StatusBadRequest})
+		return
+	}
+
+	if err := p.service.AddProductVariant(c, userID, productID, variantRequest); err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.Status(http.StatusCreated)
 }
