@@ -33,6 +33,11 @@ INSERT INTO seller_documents (document, document_url, seller_id)
 VALUES ($1, $2, $3)
 RETURNING *;
 
+-- name: CreateSeller :one
+INSERT INTO seller (user_id)
+VALUES ($1)
+RETURNING *;
+
 -- name: GetProductBySeller :one
 SELECT * FROM product
 WHERE id = $1 AND seller_id = $2;

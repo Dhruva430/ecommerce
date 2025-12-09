@@ -10,6 +10,25 @@ import (
 	"database/sql"
 )
 
+const createSeller = `-- name: CreateSeller :one
+INSERT INTO seller (user_id)
+VALUES ($1)
+RETURNING id, user_id, status, created_at, verified
+`
+
+func (q *Queries) CreateSeller(ctx context.Context, userID int64) (Seller, error) {
+	row := q.db.QueryRowContext(ctx, createSeller, userID)
+	var i Seller
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Status,
+		&i.CreatedAt,
+		&i.Verified,
+	)
+	return i, err
+}
+
 const createSellerDocument = `-- name: CreateSellerDocument :one
 INSERT INTO seller_documents (document, document_url, seller_id)
 VALUES ($1, $2, $3)

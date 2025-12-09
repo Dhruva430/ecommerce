@@ -33,6 +33,26 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) er
 	return err
 }
 
+const createBuyer = `-- name: CreateBuyer :one
+INSERT INTO buyer (user_id)
+VALUES ($1)
+RETURNING id, user_id, loyalty_points, total_orders, wishlist, created_at
+`
+
+func (q *Queries) CreateBuyer(ctx context.Context, userID int64) (Buyer, error) {
+	row := q.db.QueryRowContext(ctx, createBuyer, userID)
+	var i Buyer
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.LoyaltyPoints,
+		&i.TotalOrders,
+		&i.Wishlist,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createRefreshToken = `-- name: CreateRefreshToken :exec
 INSERT INTO refresh_token (id, token, user_id, ip_address, expires_at)
 VALUES ($1, $2, $3, $4, $5)

@@ -1,3 +1,4 @@
+-- I think it trash now
 CREATE TABLE
   buyer (
     id BIGSERIAL PRIMARY KEY,
@@ -5,7 +6,7 @@ CREATE TABLE
     loyalty_points INT NOT NULL DEFAULT 0,
     total_orders INT NOT NULL DEFAULT 0,
     wishlist JSONB,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW ()
+    created_at TIMESTAMP NOT NULL DEFAULT NOW () updated_at TIMESTAMP NOT NULL DEFAULT NOW ()
   );
 
 CREATE TABLE
@@ -13,8 +14,11 @@ CREATE TABLE
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL UNIQUE REFERENCES "user" (id) ON DELETE CASCADE,
     status seller_status NOT NULL DEFAULT 'PENDING',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW (),
-    verified BOOLEAN NOT NULL DEFAULT FALSE
+    verified BOOLEAN NOT NULL DEFAULT FALSE,
+    rating FLOAT NOT NULL DEFAULT 0,
+    total_products INT NOT NULL DEFAULT 0,
+    total_sales INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW ()
   );
 
 CREATE TABLE

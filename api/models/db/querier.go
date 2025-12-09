@@ -11,10 +11,12 @@ import (
 type Querier interface {
 	CountProducts(ctx context.Context, arg CountProductsParams) (int64, error)
 	CreateAccount(ctx context.Context, arg CreateAccountParams) error
+	CreateBuyer(ctx context.Context, userID int64) (Buyer, error)
 	CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error)
 	CreateProductVariant(ctx context.Context, arg CreateProductVariantParams) (ProductVariant, error)
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) error
 	CreateRequestFileUpload(ctx context.Context, arg CreateRequestFileUploadParams) (Upload, error)
+	CreateSeller(ctx context.Context, userID int64) (Seller, error)
 	CreateSellerDocument(ctx context.Context, arg CreateSellerDocumentParams) (SellerDocument, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	CreateVariantAttribute(ctx context.Context, arg CreateVariantAttributeParams) (VariantAttribute, error)

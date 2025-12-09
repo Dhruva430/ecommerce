@@ -11,27 +11,25 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO "user" (email, role, username)
-VALUES ($1, $2, $3)
-RETURNING id, email, role
+INSERT INTO "user" (email, username)
+VALUES ($1, $2)
+RETURNING id, email
 `
 
 type CreateUserParams struct {
 	Email    string `json:"email"`
-	Role     Role   `json:"role"`
 	Username string `json:"username"`
 }
 
 type CreateUserRow struct {
 	ID    int64  `json:"id"`
 	Email string `json:"email"`
-	Role  Role   `json:"role"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
-	row := q.db.QueryRowContext(ctx, createUser, arg.Email, arg.Role, arg.Username)
+	row := q.db.QueryRowContext(ctx, createUser, arg.Email, arg.Username)
 	var i CreateUserRow
-	err := row.Scan(&i.ID, &i.Email, &i.Role)
+	err := row.Scan(&i.ID, &i.Email)
 	return i, err
 }
 
@@ -125,7 +123,7 @@ func (q *Queries) GetUserAddresses(ctx context.Context, userID int64) ([]Address
 }
 
 const getUserByAccountID = `-- name: GetUserByAccountID :one
-SELECT u.id, u.email, u.role, a.account_id, a.provider, a.password, u.username
+SELECT u.id, u.email, a.account_id, a.provider, a.password, u.username
 FROM user_view u
 JOIN account a ON u.id = a.user_id
 WHERE a.account_id = $1
@@ -134,7 +132,6 @@ WHERE a.account_id = $1
 type GetUserByAccountIDRow struct {
 	ID        int64          `json:"id"`
 	Email     string         `json:"email"`
-	Role      Role           `json:"role"`
 	AccountID string         `json:"account_id"`
 	Provider  Provider       `json:"provider"`
 	Password  sql.NullString `json:"password"`
@@ -147,7 +144,6 @@ func (q *Queries) GetUserByAccountID(ctx context.Context, accountID string) (Get
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
-		&i.Role,
 		&i.AccountID,
 		&i.Provider,
 		&i.Password,
@@ -157,7 +153,7 @@ func (q *Queries) GetUserByAccountID(ctx context.Context, accountID string) (Get
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, username, created_at, role, address_id, verified, is_deleted, is_banned FROM user_view WHERE email = $1
+SELECT id, email, username, created_at, address_id, verified, is_deleted, is_banned FROM user_view WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (UserView, error) {
@@ -168,7 +164,6 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (UserView, e
 		&i.Email,
 		&i.Username,
 		&i.CreatedAt,
-		&i.Role,
 		&i.AddressID,
 		&i.Verified,
 		&i.IsDeleted,
@@ -178,7 +173,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (UserView, e
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, role, username
+SELECT id, email,  username
 FROM user_view
 WHERE id = $1
 `
@@ -186,19 +181,13 @@ WHERE id = $1
 type GetUserByIDRow struct {
 	ID       int64  `json:"id"`
 	Email    string `json:"email"`
-	Role     Role   `json:"role"`
 	Username string `json:"username"`
 }
 
 func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, error) {
 	row := q.db.QueryRowContext(ctx, getUserByID, id)
 	var i GetUserByIDRow
-	err := row.Scan(
-		&i.ID,
-		&i.Email,
-		&i.Role,
-		&i.Username,
-	)
+	err := row.Scan(&i.ID, &i.Email, &i.Username)
 	return i, err
 }
 

@@ -40,7 +40,7 @@ func (s *SellerController) ApplyForSellerKYC(c *gin.Context) {
 
 }
 
-func (p *ProductController) CreateProduct(c *gin.Context) {
+func (s *SellerController) CreateProduct(c *gin.Context) {
 	var req request.CreateProductRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.Error(&errors.AppError{Message: "invalid request", Code: http.StatusBadRequest})
@@ -53,7 +53,7 @@ func (p *ProductController) CreateProduct(c *gin.Context) {
 		return
 	}
 
-	product, err := p.service.CreateProduct(c, req, userID.(int64))
+	product, err := s.service.CreateProduct(c, req, userID.(int64))
 	if err != nil {
 		c.Error(err)
 		return
@@ -65,7 +65,7 @@ func (p *ProductController) CreateProduct(c *gin.Context) {
 	})
 }
 
-func (p *ProductController) UpdateProduct(c *gin.Context) {
+func (s *SellerController) UpdateProduct(c *gin.Context) {
 	idParam := c.Param("product_id")
 	productID, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
@@ -85,7 +85,7 @@ func (p *ProductController) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	product, err := p.service.UpdateProduct(c, productID, req, userID)
+	product, err := s.service.UpdateProduct(c, productID, req, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -97,7 +97,7 @@ func (p *ProductController) UpdateProduct(c *gin.Context) {
 	})
 }
 
-func (p *ProductController) DeleteProduct(c *gin.Context) {
+func (s *SellerController) DeleteProduct(c *gin.Context) {
 	idParam := c.Param("product_id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
@@ -111,7 +111,7 @@ func (p *ProductController) DeleteProduct(c *gin.Context) {
 		return
 	}
 
-	err = p.service.DeleteProduct(c, id, userID.(int64))
+	err = s.service.DeleteProduct(c, id, userID.(int64))
 	if err != nil {
 		c.Error(err)
 		return
@@ -119,5 +119,23 @@ func (p *ProductController) DeleteProduct(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Product deleted successfully",
+	})
+}
+
+func (s *SellerController) RegisterSeller(c *gin.Context) {
+	var req request.RegisterSellerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(&errors.AppError{Message: "invalid request", Code: http.StatusBadRequest})
+		return
+	}
+
+	err := s.service.RegisterSeller(c, req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Seller registered successfully",
 	})
 }

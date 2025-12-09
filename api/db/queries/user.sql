@@ -1,10 +1,10 @@
 -- name: CreateUser :one
-INSERT INTO "user" (email, role, username)
-VALUES ($1, $2, $3)
-RETURNING id, email, role;
+INSERT INTO "user" (email, username)
+VALUES ($1, $2)
+RETURNING id, email;
 
 -- name: GetUserByAccountID :one
-SELECT u.id, u.email, u.role, a.account_id, a.provider, a.password, u.username
+SELECT u.id, u.email, a.account_id, a.provider, a.password, u.username
 FROM user_view u
 JOIN account a ON u.id = a.user_id
 WHERE a.account_id = $1;
@@ -13,7 +13,7 @@ WHERE a.account_id = $1;
 SELECT * FROM user_view WHERE email = $1;
 
 -- name: GetUserByID :one
-SELECT id, email, role, username
+SELECT id, email,  username
 FROM user_view
 WHERE id = $1;
 

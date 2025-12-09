@@ -5,6 +5,7 @@ import (
 	"api/internals/data/request"
 	"api/internals/data/response"
 	"api/models/db"
+	"api/util"
 	"context"
 	"database/sql"
 	"net/http"
@@ -69,7 +70,7 @@ func (s *SellerService) SubmitKYC(ctx context.Context, userID int64, req request
 	}
 	return nil
 }
-func (s *ProductService) CreateProduct(ctx context.Context, req request.CreateProductRequest, userID int64) (response.ProductResponse, error) {
+func (s *SellerService) CreateProduct(ctx context.Context, req request.CreateProductRequest, userID int64) (response.ProductResponse, error) {
 	seller, err := s.Queries.GetSellerByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -164,7 +165,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, req request.CreatePr
 		ID: product.ID,
 	}, nil
 }
-func (s *ProductService) UpdateProduct(ctx context.Context, productID int64, req request.UpdateProductRequest, userID int64) (response.ProductResponse, error) {
+func (s *SellerService) UpdateProduct(ctx context.Context, productID int64, req request.UpdateProductRequest, userID int64) (response.ProductResponse, error) {
 	seller, err := s.Queries.GetSellerByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -274,7 +275,7 @@ func (s *ProductService) UpdateProduct(ctx context.Context, productID int64, req
 
 }
 
-func (s *ProductService) DeleteProduct(ctx context.Context, productID int64, userID int64) error {
+func (s *SellerService) DeleteProduct(ctx context.Context, productID int64, userID int64) error {
 	seller, err := s.Queries.GetSellerByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -300,4 +301,55 @@ func (s *ProductService) DeleteProduct(ctx context.Context, productID int64, use
 	}
 
 	return nil
+}
+
+func (s *SellerService) RegisterSeller(ctx context.Context, req request.RegisterSellerRequest) error {
+	existingUser, err := s.Queries.GetUserByEmail(ctx, req.Email)
+	if err != nil && err != sql.ErrNoRows {
+		return &errors.AppError{Message: "failed to check existing user", Code: http.StatusInternalServerError}
+	}
+	if existingUser.ID != 0 {
+		return &errors.AppError{Message: "user with this email already exists", Code: http.StatusBadRequest}
+	}
+
+	hashedPassword, err := util.HashPassword(req.Password)
+	if err != nil {
+		return &errors.AppError{Message: "failed to hash password", Code: http.StatusInternalServerError}
+	}
+	userData := db.CreateUserParams{
+		Email:    req.Email,
+		Username: req.Username,
+	}
+	tx, err := s.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return &errors.AppError{Message: "failed to begin transaction", Code: http.StatusInternalServerError}
+	}
+	qtx := s.Queries.WithTx(tx)
+	user, err := qtx.CreateUser(ctx, userData)
+	if err != nil {
+		tx.Rollback()
+		return &errors.AppError{Message: "failed to create user", Code: http.StatusInternalServerError}
+	}
+	accountData := db.CreateAccountParams{
+		UserID:    user.ID,
+		Provider:  db.ProviderCREDENTIALS,
+		AccountID: req.Email,
+		Password:  sql.NullString{String: hashedPassword, Valid: true},
+	}
+	if err = qtx.CreateAccount(ctx, accountData); err != nil {
+		tx.Rollback()
+		return &errors.AppError{Message: "failed to create account", Code: http.StatusInternalServerError}
+	}
+	_, err = qtx.CreateSeller(ctx, user.ID)
+	if err != nil {
+		tx.Rollback()
+		return &errors.AppError{Message: "failed to create seller", Code: http.StatusInternalServerError}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return &errors.AppError{Message: "failed to commit transaction", Code: http.StatusInternalServerError}
+	}
+	return nil
+
 }

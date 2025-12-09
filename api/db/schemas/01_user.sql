@@ -4,7 +4,6 @@ CREATE TABLE
     email TEXT NOT NULL UNIQUE,
     username TEXT NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW (),
-    role role NOT NULL DEFAULT 'BUYER',
     address_id BIGINT,
     verified BOOLEAN NOT NULL DEFAULT FALSE,
     is_deleted BOOLEAN NOT NULL DEFAULT FALSE,

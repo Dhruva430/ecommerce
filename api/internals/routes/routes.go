@@ -31,8 +31,8 @@ func SetupRouter(queries *db.Queries, conn *sql.DB) *gin.Engine {
 	// -------------------- PUBLIC ROUTES -------------------- //
 	authRoutes := routerAPI.Group("/auth")
 	{
-		authRoutes.POST("/register", authController.Register)
-		authRoutes.POST("/login", authController.Login)
+		authRoutes.POST("/register", authController.BuyerRegister)
+		authRoutes.POST("/login", authController.BuyerLogin)
 		authRoutes.POST("/refresh-token", authController.RefreshTokenHandler)
 	}
 
@@ -57,9 +57,9 @@ func SetupRouter(queries *db.Queries, conn *sql.DB) *gin.Engine {
 		protected.GET("/user/orders", userController.GetOrderHistory)
 	}
 	{
-		protected.POST("/products", productController.CreateProduct)
-		protected.PUT("/products/:id", productController.UpdateProduct)
-		protected.DELETE("/products/:id", productController.DeleteProduct)
+		// protected.POST("/products", productController.CreateProduct)
+		// protected.PUT("/products/:id", productController.UpdateProduct)
+		// protected.DELETE("/products/:id", productController.DeleteProduct)
 	}
 	{
 		protected.POST("/upload/request", uploadController.RequestFileUpload)

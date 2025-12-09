@@ -18,3 +18,8 @@ WHERE id = $1;
 
 -- name: DeleteRefreshTokensByID :exec
 DELETE FROM refresh_token WHERE id = $1;
+
+-- name: CreateBuyer :one
+INSERT INTO buyer (user_id)
+VALUES ($1)
+RETURNING *;

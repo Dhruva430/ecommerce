@@ -15,3 +15,8 @@ type SellerDocument struct {
 	Document    string `json:"document" binding:"required"`
 	DocumentURL string `json:"document_url" binding:"required,url"`
 }
+type RegisterSellerRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8"`
+	Username string `json:"username" binding:"required"`
+}

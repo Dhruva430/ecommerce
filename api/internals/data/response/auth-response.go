@@ -1,7 +1,6 @@
 package response
 
 import (
-	"api/models/db"
 	"time"
 )
 
@@ -9,7 +8,6 @@ type UserResponse struct {
 	ID             int64     `json:"id"`
 	Email          string    `json:"email"`
 	Username       string    `json:"username,omitempty"`
-	Role           db.Role   `json:"role"`
 	AccessToken    string    `json:"access_token,omitempty"`
 	RefreshToken   string    `json:"refresh_token,omitempty"`
 	TokenExpiresAt time.Time `json:"token_expires_at,omitempty"`
@@ -25,5 +23,4 @@ type UserDetails struct {
 	ID       int64  `json:"id"`
 	Email    string `json:"email"`
 	Username string `json:"username,omitempty"`
-	Role     string `json:"role"`
 }

@@ -20,7 +20,7 @@ func NewAuthController(service service.AuthService) *AuthController {
 	}
 }
 
-func (a *AuthController) Register(c *gin.Context) {
+func (a *AuthController) BuyerRegister(c *gin.Context) {
 	var req request.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.Error(err)
@@ -36,7 +36,7 @@ func (a *AuthController) Register(c *gin.Context) {
 
 }
 
-func (a *AuthController) Login(c *gin.Context) {
+func (a *AuthController) BuyerLogin(c *gin.Context) {
 	var req request.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.Error(&errors.AppError{Message: "invalid request", Code: http.StatusBadRequest})
@@ -108,6 +108,5 @@ func (a *AuthController) Me(c *gin.Context) {
 		"id":       user.ID,
 		"email":    user.Email,
 		"username": user.Username,
-		"role":     user.Role,
 	})
 }

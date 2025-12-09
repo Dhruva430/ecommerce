@@ -190,49 +190,6 @@ func (ns NullProvider) Value() (driver.Value, error) {
 	return string(ns.Provider), nil
 }
 
-type Role string
-
-const (
-	RoleBUYER  Role = "BUYER"
-	RoleSELLER Role = "SELLER"
-	RoleADMIN  Role = "ADMIN"
-)
-
-func (e *Role) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = Role(s)
-	case string:
-		*e = Role(s)
-	default:
-		return fmt.Errorf("unsupported scan type for Role: %T", src)
-	}
-	return nil
-}
-
-type NullRole struct {
-	Role  Role `json:"role"`
-	Valid bool `json:"valid"` // Valid is true if Role is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullRole) Scan(value interface{}) error {
-	if value == nil {
-		ns.Role, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.Role.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullRole) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.Role), nil
-}
-
 type SellerStatus string
 
 const (
@@ -505,7 +462,6 @@ type User struct {
 	Email     string        `json:"email"`
 	Username  string        `json:"username"`
 	CreatedAt time.Time     `json:"created_at"`
-	Role      Role          `json:"role"`
 	AddressID sql.NullInt64 `json:"address_id"`
 	Verified  bool          `json:"verified"`
 	IsDeleted bool          `json:"is_deleted"`
@@ -517,7 +473,6 @@ type UserView struct {
 	Email     string        `json:"email"`
 	Username  string        `json:"username"`
 	CreatedAt time.Time     `json:"created_at"`
-	Role      Role          `json:"role"`
 	AddressID sql.NullInt64 `json:"address_id"`
 	Verified  bool          `json:"verified"`
 	IsDeleted bool          `json:"is_deleted"`

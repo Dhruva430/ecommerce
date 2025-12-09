@@ -38,17 +38,11 @@ func (a *AuthService) BuyerRegister(ctx context.Context, req request.RegisterReq
 	if err == nil && savedUser.ID != 0 {
 		return &errors.AppError{Message: "Email already in used", Code: http.StatusConflict}
 	}
-	if savedUser.Role != db.RoleBUYER {
-		return &errors.AppError{Message: "Email already in used", Code: http.StatusConflict}
-	}
-
-	defer tx.Rollback()
 
 	qtx := a.Queries.WithTx(tx)
 
 	data := db.CreateUserParams{
 		Email:    req.Email,
-		Role:     db.RoleBUYER,
 		Username: req.Username,
 	}
 	user, err := qtx.CreateUser(
@@ -70,6 +64,12 @@ func (a *AuthService) BuyerRegister(ctx context.Context, req request.RegisterReq
 		fmt.Print(err)
 		return &errors.AppError{Message: "failed to create account", Code: http.StatusInternalServerError}
 	}
+	_, err = qtx.CreateBuyer(ctx, user.ID)
+	if err != nil {
+		tx.Rollback()
+		return &errors.AppError{Message: "failed to create buyer", Code: http.StatusInternalServerError}
+	}
+
 	if err := tx.Commit(); err != nil {
 		return &errors.AppError{Message: "failed to commit transaction", Code: http.StatusInternalServerError}
 	}
@@ -112,7 +112,6 @@ func (a *AuthService) BuyerLogin(ctx context.Context, req request.LoginRequest, 
 			ID:             user.ID,
 			Email:          user.Email,
 			Username:       user.Username,
-			Role:           db.RoleBUYER,
 			RefreshToken:   refreshToken,
 			AccessToken:    accessToken,
 			TokenExpiresAt: claims.ExpiresAt.Time,
@@ -181,7 +180,6 @@ func (a *AuthService) GetUserByID(ctx context.Context, userID int64) (response.U
 		ID:       user.ID,
 		Email:    user.Email,
 		Username: user.Username,
-		Role:     string(user.Role),
 	}, nil
 }
 
