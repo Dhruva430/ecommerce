@@ -75,3 +75,7 @@ RETURNING *;
 UPDATE product
 SET is_active = FALSE
 WHERE id = $1;
+
+-- name: GetProductVariant :one
+SELECT * FROM product_variant
+WHERE product_id = $1 and id = $2;

@@ -72,8 +72,7 @@ func (s *UserService) GetOrderHistory(ctx context.Context, userID int64, filter 
 		respOrder := response.OrderResponse{
 			ID:            order.ID,
 			UserID:        order.UserID,
-			Address:       string(order.Address),
-			SellerID:      order.SellerID.Int64,
+			AddressID:     order.AddressID,
 			Total:         order.TotalAmount,
 			Status:        string(order.Status),
 			PaymentStatus: string(order.PaymentStatus),

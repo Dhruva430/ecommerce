@@ -12,6 +12,8 @@ type Querier interface {
 	CountProducts(ctx context.Context, arg CountProductsParams) (int64, error)
 	CreateAccount(ctx context.Context, arg CreateAccountParams) error
 	CreateBuyer(ctx context.Context, userID int64) (Buyer, error)
+	CreateOrder(ctx context.Context, arg CreateOrderParams) (Order, error)
+	CreateOrderProduct(ctx context.Context, arg CreateOrderProductParams) (OrderProduct, error)
 	CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error)
 	CreateProductVariant(ctx context.Context, arg CreateProductVariantParams) (ProductVariant, error)
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) error
@@ -21,13 +23,16 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	CreateVariantAttribute(ctx context.Context, arg CreateVariantAttributeParams) (VariantAttribute, error)
 	CreateVariantImage(ctx context.Context, arg CreateVariantImageParams) (VariantImage, error)
+	DecrementProductVariantStock(ctx context.Context, arg DecrementProductVariantStockParams) error
 	DeleteProduct(ctx context.Context, id int64) error
 	DeleteRefreshTokensByID(ctx context.Context, id string) error
 	DeleteUser(ctx context.Context, id int64) error
 	GetAllProducts(ctx context.Context, arg GetAllProductsParams) ([]Product, error)
+	GetOrderByID(ctx context.Context, arg GetOrderByIDParams) (Order, error)
 	GetOrderHistory(ctx context.Context, userID int64) ([]Order, error)
 	GetProductByID(ctx context.Context, id int64) (Product, error)
 	GetProductBySeller(ctx context.Context, arg GetProductBySellerParams) (Product, error)
+	GetProductVariant(ctx context.Context, arg GetProductVariantParams) (ProductVariant, error)
 	GetRefreshToken(ctx context.Context, id string) (GetRefreshTokenRow, error)
 	GetSellerByUserID(ctx context.Context, userID int64) (Seller, error)
 	GetUploadRequestByKey(ctx context.Context, key string) (Upload, error)

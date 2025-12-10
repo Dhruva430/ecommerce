@@ -32,7 +32,7 @@ func (s *SellerController) ApplyForSellerKYC(c *gin.Context) {
 		return
 	}
 
-	err := s.service.SubmitKYC(c, userID, req)
+	err := s.service.ApplyForKYC(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return

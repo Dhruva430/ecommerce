@@ -45,7 +45,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 }
 
 const getOrderHistory = `-- name: GetOrderHistory :many
-SELECT id, user_id, address, seller_id, address_id, total_amount, created_at, status, payment_status FROM orders
+SELECT id, user_id, address_id, total_amount, created_at, status, payment_status FROM orders
 WHERE user_id = $1
 ORDER BY created_at DESC
 `
@@ -62,8 +62,6 @@ func (q *Queries) GetOrderHistory(ctx context.Context, userID int64) ([]Order, e
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
-			&i.Address,
-			&i.SellerID,
 			&i.AddressID,
 			&i.TotalAmount,
 			&i.CreatedAt,

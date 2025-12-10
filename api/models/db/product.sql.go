@@ -236,6 +236,32 @@ func (q *Queries) GetProductByID(ctx context.Context, id int64) (Product, error)
 	return i, err
 }
 
+const getProductVariant = `-- name: GetProductVariant :one
+SELECT id, size, description, discounted, title, price, stock, product_id FROM product_variant
+WHERE product_id = $1 and id = $2
+`
+
+type GetProductVariantParams struct {
+	ProductID int64 `json:"product_id"`
+	ID        int64 `json:"id"`
+}
+
+func (q *Queries) GetProductVariant(ctx context.Context, arg GetProductVariantParams) (ProductVariant, error) {
+	row := q.db.QueryRowContext(ctx, getProductVariant, arg.ProductID, arg.ID)
+	var i ProductVariant
+	err := row.Scan(
+		&i.ID,
+		&i.Size,
+		&i.Description,
+		&i.Discounted,
+		&i.Title,
+		&i.Price,
+		&i.Stock,
+		&i.ProductID,
+	)
+	return i, err
+}
+
 const updateProduct = `-- name: UpdateProduct :one
 UPDATE product
 SET title = $2,

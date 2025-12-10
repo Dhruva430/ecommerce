@@ -333,23 +333,20 @@ type CheckoutInfo struct {
 }
 
 type Order struct {
-	ID            int64           `json:"id"`
-	UserID        int64           `json:"user_id"`
-	Address       json.RawMessage `json:"address"`
-	SellerID      sql.NullInt64   `json:"seller_id"`
-	AddressID     sql.NullInt64   `json:"address_id"`
-	TotalAmount   float64         `json:"total_amount"`
-	CreatedAt     time.Time       `json:"created_at"`
-	Status        OrderStatus     `json:"status"`
-	PaymentStatus PaymentStatus   `json:"payment_status"`
+	ID            int64         `json:"id"`
+	UserID        int64         `json:"user_id"`
+	AddressID     sql.NullInt64 `json:"address_id"`
+	TotalAmount   float64       `json:"total_amount"`
+	CreatedAt     time.Time     `json:"created_at"`
+	Status        OrderStatus   `json:"status"`
+	PaymentStatus PaymentStatus `json:"payment_status"`
 }
 
 type OrderProduct struct {
 	ID        int64         `json:"id"`
 	ProductID int64         `json:"product_id"`
-	SellerID  int64         `json:"seller_id"`
-	Amount    int32         `json:"amount"`
 	VariantID int64         `json:"variant_id"`
+	Amount    int32         `json:"amount"`
 	OrderID   sql.NullInt64 `json:"order_id"`
 }
 

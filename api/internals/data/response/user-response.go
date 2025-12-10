@@ -1,6 +1,9 @@
 package response
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 type UpdateAddressResponse struct {
 	ID          int64     `json:"id"`
@@ -17,14 +20,14 @@ type GetUserAddressResponse struct {
 }
 
 type OrderResponse struct {
-	ID            int64     `json:"id"`
-	UserID        int64     `json:"user_id"`
-	Address       string    `json:"address"`
-	SellerID      int64     `json:"seller_id"`
-	Total         float64   `json:"total_amount"`
-	Status        string    `json:"status"`
-	PaymentStatus string    `json:"payment_status"`
-	CreatedAt     time.Time `json:"created_at"`
+	ID            int64         `json:"id"`
+	UserID        int64         `json:"user_id"`
+	AddressID     sql.NullInt64 `json:"address"`
+	SellerID      int64         `json:"seller_id"`
+	Total         float64       `json:"total_amount"`
+	Status        string        `json:"status"`
+	PaymentStatus string        `json:"payment_status"`
+	CreatedAt     time.Time     `json:"created_at"`
 }
 type OrderHistoryResponse struct {
 	Orders []OrderResponse `json:"orders"`
