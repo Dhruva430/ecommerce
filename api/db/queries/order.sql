@@ -13,6 +13,25 @@ UPDATE product_variant
 SET stock = stock - $2
 WHERE id = $1 AND stock >= $2;
 
--- name: GetOrderByID :one
+-- name: IncrementProductVariantStock :exec
+UPDATE product_variant
+SET stock = stock + $2
+WHERE id = $1;
+
+-- name: GetOrderDetailsByID :one
 SELECT * FROM orders
 WHERE id = $1 AND user_id = $2;
+
+-- name: UpdateOrderStatus :exec
+UPDATE orders
+SET status = $2
+WHERE id = $1;
+
+-- name: CancelOrder :exec
+UPDATE orders
+SET status = 'canceled'
+WHERE id = $1 AND user_id = $2;
+
+-- name: GetOrderProducts :many
+SELECT * FROM order_product
+WHERE order_id = $1;

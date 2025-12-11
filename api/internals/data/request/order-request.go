@@ -12,3 +12,7 @@ type OrderItemRequest struct {
 	VariantID int64 `json:"variant_id" binding:"required"`
 	Quantity  int   `json:"quantity" binding:"required,min=1"`
 }
+
+type UpdateOrderStatusRequest struct {
+	Status string `json:"status" binding:"required,oneof=pending shipped delivered canceled"`
+}

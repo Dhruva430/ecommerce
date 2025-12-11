@@ -363,5 +363,8 @@ func (s *SellerService) RegisterSeller(ctx context.Context, req request.Register
 	return nil
 
 }
+func (s *SellerService) LoginSeller(ctx context.Context, req request.LoginRequest, ip string) error {
+	return nil
+}
 
 // TODO: Add analytics methods for seller service

@@ -122,7 +122,7 @@ func (s *SellerController) DeleteProduct(c *gin.Context) {
 	})
 }
 
-func (s *SellerController) RegisterSeller(c *gin.Context) {
+func (s *SellerController) SellerRegisters(c *gin.Context) {
 	var req request.RegisterSellerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.Error(&errors.AppError{Message: "invalid request", Code: http.StatusBadRequest})
@@ -138,4 +138,31 @@ func (s *SellerController) RegisterSeller(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Seller registered successfully",
 	})
+}
+
+func (s *SellerController) LoginSeller(c *gin.Context) {
+	// TODO: Implement seller login logic
+	var req request.LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(&errors.AppError{Message: "invalid request", Code: http.StatusBadRequest})
+		return
+	}
+	ip := c.ClientIP()
+	req = request.LoginRequest{
+		Email:    req.Email,
+		Password: req.Password,
+	}
+	if err := s.service.LoginSeller(c, req, ip); err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Seller Logged in"})
+}
+
+func (s *SellerController) LogoutSeller(c *gin.Context) {
+	// TODO: Implement seller logout logic
+}
+func (s *SellerController) GetSellerProducts(c *gin.Context) {
+	// TODO: Implement logic to get products for a seller
 }

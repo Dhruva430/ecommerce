@@ -10,6 +10,22 @@ import (
 	"database/sql"
 )
 
+const cancelOrder = `-- name: CancelOrder :exec
+UPDATE orders
+SET status = 'canceled'
+WHERE id = $1 AND user_id = $2
+`
+
+type CancelOrderParams struct {
+	ID     int64 `json:"id"`
+	UserID int64 `json:"user_id"`
+}
+
+func (q *Queries) CancelOrder(ctx context.Context, arg CancelOrderParams) error {
+	_, err := q.db.ExecContext(ctx, cancelOrder, arg.ID, arg.UserID)
+	return err
+}
+
 const createOrder = `-- name: CreateOrder :one
 INSERT INTO orders (user_id, address_id, total_amount)
 VALUES ($1, $2, $3)
@@ -84,18 +100,18 @@ func (q *Queries) DecrementProductVariantStock(ctx context.Context, arg Decremen
 	return err
 }
 
-const getOrderByID = `-- name: GetOrderByID :one
+const getOrderDetailsByID = `-- name: GetOrderDetailsByID :one
 SELECT id, user_id, address_id, total_amount, created_at, status, payment_status FROM orders
 WHERE id = $1 AND user_id = $2
 `
 
-type GetOrderByIDParams struct {
+type GetOrderDetailsByIDParams struct {
 	ID     int64 `json:"id"`
 	UserID int64 `json:"user_id"`
 }
 
-func (q *Queries) GetOrderByID(ctx context.Context, arg GetOrderByIDParams) (Order, error) {
-	row := q.db.QueryRowContext(ctx, getOrderByID, arg.ID, arg.UserID)
+func (q *Queries) GetOrderDetailsByID(ctx context.Context, arg GetOrderDetailsByIDParams) (Order, error) {
+	row := q.db.QueryRowContext(ctx, getOrderDetailsByID, arg.ID, arg.UserID)
 	var i Order
 	err := row.Scan(
 		&i.ID,
@@ -107,4 +123,70 @@ func (q *Queries) GetOrderByID(ctx context.Context, arg GetOrderByIDParams) (Ord
 		&i.PaymentStatus,
 	)
 	return i, err
+}
+
+const getOrderProducts = `-- name: GetOrderProducts :many
+SELECT id, product_id, variant_id, amount, order_id FROM order_product
+WHERE order_id = $1
+`
+
+func (q *Queries) GetOrderProducts(ctx context.Context, orderID sql.NullInt64) ([]OrderProduct, error) {
+	rows, err := q.db.QueryContext(ctx, getOrderProducts, orderID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []OrderProduct
+	for rows.Next() {
+		var i OrderProduct
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductID,
+			&i.VariantID,
+			&i.Amount,
+			&i.OrderID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const incrementProductVariantStock = `-- name: IncrementProductVariantStock :exec
+UPDATE product_variant
+SET stock = stock + $2
+WHERE id = $1
+`
+
+type IncrementProductVariantStockParams struct {
+	ID    int64 `json:"id"`
+	Stock int32 `json:"stock"`
+}
+
+func (q *Queries) IncrementProductVariantStock(ctx context.Context, arg IncrementProductVariantStockParams) error {
+	_, err := q.db.ExecContext(ctx, incrementProductVariantStock, arg.ID, arg.Stock)
+	return err
+}
+
+const updateOrderStatus = `-- name: UpdateOrderStatus :exec
+UPDATE orders
+SET status = $2
+WHERE id = $1
+`
+
+type UpdateOrderStatusParams struct {
+	ID     int64       `json:"id"`
+	Status OrderStatus `json:"status"`
+}
+
+func (q *Queries) UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) error {
+	_, err := q.db.ExecContext(ctx, updateOrderStatus, arg.ID, arg.Status)
+	return err
 }

@@ -6,9 +6,11 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 type Querier interface {
+	CancelOrder(ctx context.Context, arg CancelOrderParams) error
 	CountProducts(ctx context.Context, arg CountProductsParams) (int64, error)
 	CreateAccount(ctx context.Context, arg CreateAccountParams) error
 	CreateBuyer(ctx context.Context, userID int64) (Buyer, error)
@@ -28,8 +30,9 @@ type Querier interface {
 	DeleteRefreshTokensByID(ctx context.Context, id string) error
 	DeleteUser(ctx context.Context, id int64) error
 	GetAllProducts(ctx context.Context, arg GetAllProductsParams) ([]Product, error)
-	GetOrderByID(ctx context.Context, arg GetOrderByIDParams) (Order, error)
+	GetOrderDetailsByID(ctx context.Context, arg GetOrderDetailsByIDParams) (Order, error)
 	GetOrderHistory(ctx context.Context, userID int64) ([]Order, error)
+	GetOrderProducts(ctx context.Context, orderID sql.NullInt64) ([]OrderProduct, error)
 	GetProductByID(ctx context.Context, id int64) (Product, error)
 	GetProductBySeller(ctx context.Context, arg GetProductBySellerParams) (Product, error)
 	GetProductVariant(ctx context.Context, arg GetProductVariantParams) (ProductVariant, error)
@@ -40,6 +43,8 @@ type Querier interface {
 	GetUserByAccountID(ctx context.Context, accountID string) (GetUserByAccountIDRow, error)
 	GetUserByEmail(ctx context.Context, email string) (UserView, error)
 	GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, error)
+	IncrementProductVariantStock(ctx context.Context, arg IncrementProductVariantStockParams) error
+	UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) error
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error)
 	UpdateProductVariant(ctx context.Context, arg UpdateProductVariantParams) (ProductVariant, error)
 	UpdateRefreshTokenRevoked(ctx context.Context, arg UpdateRefreshTokenRevokedParams) error

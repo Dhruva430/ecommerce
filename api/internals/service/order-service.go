@@ -88,7 +88,7 @@ func (s *OrderService) PlaceOrder(c context.Context, userID int64, req request.P
 }
 
 func (s *OrderService) GetOrderDetails(c context.Context, userID int64, orderID int64) (db.Order, error) {
-	order, err := s.Queries.GetOrderByID(c, db.GetOrderByIDParams{
+	order, err := s.Queries.GetOrderDetailsByID(c, db.GetOrderDetailsByIDParams{
 		ID:     orderID,
 		UserID: userID,
 	})
@@ -96,4 +96,39 @@ func (s *OrderService) GetOrderDetails(c context.Context, userID int64, orderID 
 		return db.Order{}, &errors.AppError{Message: "failed to get order details", Code: http.StatusInternalServerError}
 	}
 	return order, nil
+}
+
+func (s *OrderService) UpdateOrderStatus(c context.Context, userID, orderID int64, req request.UpdateOrderStatusRequest) error {
+	if err := s.Queries.UpdateOrderStatus(c, db.UpdateOrderStatusParams{
+		ID:     orderID,
+		Status: db.OrderStatus(req.Status),
+	}); err != nil {
+		return &errors.AppError{Message: "failed to update order status", Code: http.StatusInternalServerError}
+	}
+	return nil
+}
+
+func (s *OrderService) CancelOrder(c context.Context, userID, orderID int64) error {
+
+	product, err := s.Queries.GetOrderProducts(c, sql.NullInt64{Int64: orderID, Valid: orderID > 0})
+	if err != nil {
+		return &errors.AppError{Message: "failed to get order", Code: http.StatusInternalServerError}
+	}
+	for _, item := range product {
+		err = s.Queries.IncrementProductVariantStock(c, db.IncrementProductVariantStockParams{
+			ID:    item.VariantID,
+			Stock: item.Amount,
+		})
+		if err != nil {
+			return &errors.AppError{Message: "failed to restore stock", Code: http.StatusInternalServerError}
+		}
+	}
+
+	if err := s.Queries.CancelOrder(c, db.CancelOrderParams{
+		ID:     orderID,
+		UserID: userID,
+	}); err != nil {
+		return &errors.AppError{Message: "failed to cancel order", Code: http.StatusInternalServerError}
+	}
+	return nil
 }
