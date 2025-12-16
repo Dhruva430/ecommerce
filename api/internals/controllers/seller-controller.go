@@ -125,7 +125,7 @@ func (s *SellerController) DeleteProduct(c *gin.Context) {
 func (s *SellerController) SellerRegisters(c *gin.Context) {
 	var req request.RegisterSellerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.Error(&errors.AppError{Message: "invalid request", Code: http.StatusBadRequest})
+		c.Error(err)
 		return
 	}
 
@@ -152,12 +152,13 @@ func (s *SellerController) LoginSeller(c *gin.Context) {
 		Email:    req.Email,
 		Password: req.Password,
 	}
-	if err := s.service.LoginSeller(c, req, ip); err != nil {
+	res, err := s.service.LoginSeller(c, req, ip)
+	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Seller Logged in"})
+	c.JSON(http.StatusOK, gin.H{"message": "Seller Logged in", "data": res})
 }
 
 func (s *SellerController) LogoutSeller(c *gin.Context) {

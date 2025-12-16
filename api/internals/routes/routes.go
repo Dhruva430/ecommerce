@@ -38,6 +38,8 @@ func SetupRouter(queries *db.Queries, conn *sql.DB) *gin.Engine {
 	{
 		authRoutes.POST("/register", auth.BuyerRegister)
 		authRoutes.POST("/login", auth.BuyerLogin)
+		authRoutes.POST("/seller/register", sellers.SellerRegisters)
+		authRoutes.POST("/seller/login", sellers.LoginSeller)
 		authRoutes.POST("/refresh-token", auth.RefreshTokenHandler)
 	}
 
@@ -80,8 +82,7 @@ func SetupRouter(queries *db.Queries, conn *sql.DB) *gin.Engine {
 	// SELLER
 	sellerRoutes := protected.Group("/seller")
 	{
-		sellerRoutes.POST("/register", sellers.SellerRegisters)
-		sellerRoutes.POST("/login", sellers.LoginSeller)
+
 		sellerRoutes.POST("/kyc", sellers.ApplyForSellerKYC)
 
 		sellerRoutes.POST("/products", sellers.CreateProduct)

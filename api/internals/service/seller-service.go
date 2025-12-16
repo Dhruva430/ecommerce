@@ -363,7 +363,57 @@ func (s *SellerService) RegisterSeller(ctx context.Context, req request.Register
 	return nil
 
 }
-func (s *SellerService) LoginSeller(ctx context.Context, req request.LoginRequest, ip string) error {
+func (s *SellerService) LoginSeller(ctx context.Context, req request.LoginRequest, ip string) (response.UserResponse, error) {
+	var res response.UserResponse
+	ip = "" + ip
+	{
+		user, err := s.Queries.GetUserByAccountID(ctx, req.Email)
+		if err != nil {
+			return res, &errors.AppError{Message: "user not found register first", Code: http.StatusUnauthorized}
+		}
+		if user.Provider != db.ProviderCREDENTIALS {
+			return res, &errors.AppError{Message: "Email already in use", Code: http.StatusUnauthorized}
+		}
+		isMatch := util.ComparePassword(user.Password.String, req.Password)
+		if !isMatch {
+			return res, &errors.AppError{Message: "invalidpassword", Code: http.StatusUnauthorized}
+		}
+		seller, err := s.Queries.GetSellerByUserID(ctx, user.ID)
+		if err != nil {
+			return res, &errors.AppError{Message: "failed to verify seller", Code: http.StatusInternalServerError}
+		}
+		if seller.ID == 0 {
+			return res, &errors.AppError{Message: "user is not a seller", Code: http.StatusForbidden}
+		}
+		refreshToken, claims, err := util.GenerateRefreshToken(user.ID, ip)
+		if err != nil {
+			return res, &errors.AppError{Message: "failed to generate refresh token", Code: http.StatusInternalServerError}
+		}
+		accessToken, _, err := util.GenerateAccessToken(user.ID, ip, claims.Permissions)
+		if err != nil {
+			return res, &errors.AppError{Message: "failed to generate access token", Code: http.StatusInternalServerError}
+		}
+		s.Queries.CreateRefreshToken(ctx,
+			db.CreateRefreshTokenParams{
+				ID:        claims.ID,
+				Token:     refreshToken,
+				IpAddress: sql.NullString{String: ip, Valid: true},
+				ExpiresAt: claims.ExpiresAt.Time,
+			})
+		res = response.UserResponse{
+			ID:             user.ID,
+			Email:          user.Email,
+			Username:       user.Username,
+			AccessToken:    accessToken,
+			RefreshToken:   refreshToken,
+			TokenExpiresAt: claims.ExpiresAt.Time,
+		}
+
+	}
+	return res, nil
+}
+
+func LoginSeller(ctx context.Context, req request.LoginRequest, ip string) error {
 	return nil
 }
 

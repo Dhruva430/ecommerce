@@ -1,21 +1,20 @@
 meta {
-  name: Register
+  name: Seller Register
   type: http
   seq: 2
 }
 
 post {
-  url: http://localhost:8080/api/auth/register
+  url: http://localhost:8080/api/auth/seller/register
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "email": "rdhruva12345@gmail.com",
-    "role": "BUYER",
+    "email": "shootwithcrazy@gmail.com",
     "password": "iamhero",
-    "username": "Dhruva430"
+    "username": "Dhruva40"
   }
 }
 
