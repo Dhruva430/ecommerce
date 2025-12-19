@@ -158,7 +158,10 @@ func (s *SellerController) LoginSeller(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Seller Logged in", "data": res})
+	c.JSON(http.StatusOK, gin.H{
+		"data":    res,
+		"message": "Seller logged in successfully",
+	})
 }
 
 func (s *SellerController) LogoutSeller(c *gin.Context) {

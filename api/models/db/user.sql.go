@@ -198,7 +198,7 @@ SET name = $2,
     state = $6,
     country = $7,
     phone_number = $8
-WHERE id = $1
+WHERE id = $1 and user_id = $9
 `
 
 type UpdateUserAddressParams struct {
@@ -210,6 +210,7 @@ type UpdateUserAddressParams struct {
 	State       string `json:"state"`
 	Country     string `json:"country"`
 	PhoneNumber int64  `json:"phone_number"`
+	UserID      int64  `json:"user_id"`
 }
 
 func (q *Queries) UpdateUserAddress(ctx context.Context, arg UpdateUserAddressParams) error {
@@ -222,6 +223,7 @@ func (q *Queries) UpdateUserAddress(ctx context.Context, arg UpdateUserAddressPa
 		arg.State,
 		arg.Country,
 		arg.PhoneNumber,
+		arg.UserID,
 	)
 	return err
 }

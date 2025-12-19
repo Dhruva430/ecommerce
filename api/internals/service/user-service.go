@@ -44,10 +44,11 @@ func (s *UserService) GetUserAddress(userID int64) (response.GetUserAddressRespo
 	}
 	return response.GetUserAddressResponse{Addresses: respAddresses}, nil
 }
-func (s *UserService) UpdateUserAddress(c context.Context, req request.UpdateAddressRequest) error {
+func (s *UserService) UpdateUserAddress(c context.Context, req request.UpdateAddressRequest, userID int64, AddressId int64) error {
 
 	addressParams := db.UpdateUserAddressParams{
-		ID:          req.AddressID,
+		ID:          AddressId,
+		UserID:      userID,
 		Name:        req.Name,
 		Pincode:     req.PinCode,
 		City:        req.City,

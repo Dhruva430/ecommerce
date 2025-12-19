@@ -35,7 +35,7 @@ SET name = $2,
     state = $6,
     country = $7,
     phone_number = $8
-WHERE id = $1;
+WHERE id = $1 and user_id = $9;
 
 -- name: GetOrderHistory :many
 SELECT * FROM orders

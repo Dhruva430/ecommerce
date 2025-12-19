@@ -27,7 +27,7 @@ func SetupRouter(queries *db.Queries, conn *sql.DB) *gin.Engine {
 
 	// Controllers
 	auth := controllers.NewAuthController(authService)
-	users := controllers.NewUserController(userService)
+	user := controllers.NewUserController(userService)
 	products := controllers.NewProductController(productService)
 	uploads := controllers.NewUploadController(uploadService)
 	orders := controllers.NewOrderController(orderService)
@@ -54,10 +54,10 @@ func SetupRouter(queries *db.Queries, conn *sql.DB) *gin.Engine {
 	// USER
 	userRoutes := protected.Group("/user")
 	{
-		userRoutes.DELETE("", users.DeleteUser)
-		userRoutes.GET("/addresses", users.GetUserAddress)
-		userRoutes.PUT("/addresses", users.UpdateUserAddress)
-		userRoutes.GET("/orders", users.GetOrderHistory)
+		userRoutes.DELETE("", user.DeleteUser)
+		userRoutes.GET("/address", user.GetUserAddress)
+		userRoutes.PUT("/address/:address_id", user.UpdateUserAddress)
+		userRoutes.GET("/orders", user.GetOrderHistory)
 	}
 
 	// PRODUCTS
@@ -68,15 +68,14 @@ func SetupRouter(queries *db.Queries, conn *sql.DB) *gin.Engine {
 	}
 
 	// SELLER PRODUCT VARIANTS
-	protected.POST("/seller/:product_id/variants", products.AddProductVariant)
 
 	// ORDERS
 	orderRoutes := protected.Group("/orders")
 	{
-		orderRoutes.POST("", orders.GetOrder)
+		orderRoutes.POST("/place-order", orders.GetOrder)
 		orderRoutes.GET("/:order_id", orders.GetOrderDetails)
 		orderRoutes.POST("/:order_id/cancel", orders.CancelOrder)
-		orderRoutes.POST("/:order_id/status", orders.UpdateOrderStatus)
+		orderRoutes.PATCH("/:order_id/status", orders.UpdateOrderStatus)
 	}
 
 	// SELLER
@@ -88,6 +87,7 @@ func SetupRouter(queries *db.Queries, conn *sql.DB) *gin.Engine {
 		sellerRoutes.POST("/products", sellers.CreateProduct)
 		sellerRoutes.PUT("/products/:product_id", sellers.UpdateProduct)
 		sellerRoutes.DELETE("/products/:product_id", sellers.DeleteProduct)
+		sellerRoutes.POST("/:product_id/variants", products.AddProductVariant)
 	}
 
 	// UPLOADS

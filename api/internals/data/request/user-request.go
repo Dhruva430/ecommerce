@@ -1,7 +1,6 @@
 package request
 
 type UpdateAddressRequest struct {
-	AddressID   int64  `json:"address_id"`
 	Name        string `json:"name"`
 	PinCode     int32  `json:"pin_code"`
 	City        string `json:"city"`
